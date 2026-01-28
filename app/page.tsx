@@ -1,17 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
+/**
+ * Root page - redirects to login or dashboard based on auth state
+ */
 export default async function Page() {
-  const cookieStore = await cookies();
-  const supabase = await createClient();
+  const session = await getSession();
 
-  const { data: todos } = await supabase.from("todos").select();
-
-  return (
-    <ul>
-      {todos?.map((todo) => (
-        <li>{todo}</li>
-      ))}
-    </ul>
-  );
+  if (session) {
+    redirect("/dashboard");
+  } else {
+    redirect("/auth/login");
+  }
 }
