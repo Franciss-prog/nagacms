@@ -4,7 +4,12 @@ import { useState, useCallback, useEffect } from "react";
 import { getSession } from "@/lib/auth";
 import { getFacilities } from "@/lib/queries/services";
 import { FacilitiesGrid } from "@/components/facilities/facilities-grid";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface HealthFacility {
   id: string;
@@ -66,12 +71,21 @@ export default function FacilitiesPage() {
   }, [fetchFacilities]);
 
   const handleViewDetails = (id: string) => {
+    console.log("[handleViewDetails] Called with id:", id);
+    console.log("[handleViewDetails] Current facilities:", state.facilities);
     const facility = state.facilities.find((f) => f.id === id);
+    console.log("[handleViewDetails] Found facility:", facility);
     if (facility) {
+      console.log(
+        "[handleViewDetails] Setting selectedFacility:",
+        facility.name,
+      );
       setState((prev) => ({
         ...prev,
         selectedFacility: facility,
       }));
+    } else {
+      console.warn("[handleViewDetails] Facility not found!");
     }
   };
 
@@ -97,61 +111,111 @@ export default function FacilitiesPage() {
         />
       </div>
 
-      {/* Facility Details (if selected) */}
-      {state.selectedFacility && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-bold">
-                  {state.selectedFacility.name}
-                </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {state.selectedFacility.barangay}
-                </p>
-              </div>
-
-              {state.selectedFacility.contact_json?.address && (
+      {/* Facility Details Modal */}
+      <Dialog
+        open={!!state.selectedFacility}
+        onOpenChange={(open) => {
+          if (!open) {
+            setState((prev) => ({ ...prev, selectedFacility: null }));
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {state.selectedFacility && (
+            <>
+              <DialogHeader>
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    Address
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    {state.selectedFacility.contact_json.address}
+                  <DialogTitle className="text-2xl">
+                    {state.selectedFacility.name}
+                  </DialogTitle>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    {state.selectedFacility.barangay}
                   </p>
                 </div>
-              )}
+              </DialogHeader>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                {state.selectedFacility.contact_json?.phone && (
+              <div className="space-y-6 py-4">
+                {state.selectedFacility.address && (
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      Phone
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
+                      Address
                     </p>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                      {typeof state.selectedFacility.contact_json ===
-                        "object" &&
-                      !Array.isArray(state.selectedFacility.contact_json)
-                        ? state.selectedFacility.contact_json.phone
-                        : "N/A"}
+                    <p className="mt-2 text-slate-700 dark:text-slate-300">
+                      {state.selectedFacility.address}
                     </p>
                   </div>
                 )}
+
                 {state.selectedFacility.operating_hours && (
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
                       Operating Hours
                     </p>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    <p className="mt-2 text-slate-700 dark:text-slate-300">
                       {state.selectedFacility.operating_hours}
                     </p>
                   </div>
                 )}
+
+                {state.selectedFacility.contact_json &&
+                  Array.isArray(state.selectedFacility.contact_json) &&
+                  state.selectedFacility.contact_json.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
+                        Staff Contacts
+                      </p>
+                      <div className="mt-2 space-y-2">
+                        {state.selectedFacility.contact_json.map(
+                          (contact: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700"
+                            >
+                              <p className="font-medium text-slate-900 dark:text-white">
+                                {contact.name}
+                              </p>
+                              {contact.role && (
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                  {contact.role}
+                                </p>
+                              )}
+                              {contact.phone && (
+                                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                                  {contact.phone}
+                                </p>
+                              )}
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {(state.selectedFacility.general_services ||
+                  state.selectedFacility.specialized_services) && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
+                      Services
+                    </p>
+                    <div className="mt-2 space-y-1">
+                      {state.selectedFacility.general_services && (
+                        <p className="text-slate-700 dark:text-slate-300">
+                          • {state.selectedFacility.general_services}
+                        </p>
+                      )}
+                      {state.selectedFacility.specialized_services && (
+                        <p className="text-slate-700 dark:text-slate-300">
+                          • {state.selectedFacility.specialized_services}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

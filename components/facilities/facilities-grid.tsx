@@ -48,143 +48,82 @@ export function FacilitiesGrid({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {facilities.map((facility) => (
         <Card
           key={facility.id}
-          className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-200 border-slate-200 dark:border-slate-800"
+          className="overflow-hidden hover:shadow-md transition-shadow duration-200"
         >
-          {/* Header with gradient background */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">
+          {/* Simple Header */}
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="font-bold text-slate-900 dark:text-white">
               {facility.name}
-            </CardTitle>
-            <div className="mt-2 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                {facility.barangay}
-              </span>
-            </div>
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+              {facility.barangay}
+            </p>
           </div>
 
-          {/* Content */}
-          <CardContent className="flex-1 space-y-4 py-5 px-6">
+          {/* Minimal Content */}
+          <CardContent className="space-y-3 py-3 px-4">
             {/* Address */}
             {facility.address && (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
-                  Address
-                </p>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                    {facility.address}
-                  </span>
-                </div>
+              <div className="flex gap-2 text-sm">
+                <MapPin className="h-4 w-4 flex-shrink-0 text-slate-400 mt-0.5" />
+                <span className="text-slate-700 dark:text-slate-300">
+                  {facility.address}
+                </span>
               </div>
             )}
 
             {/* Operating Hours */}
             {facility.operating_hours && (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
-                  Hours
-                </p>
-                <div className="flex items-start gap-2">
-                  <Clock className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400 mt-0.5" />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">
-                    {facility.operating_hours}
-                  </span>
-                </div>
+              <div className="flex gap-2 text-sm">
+                <Clock className="h-4 w-4 flex-shrink-0 text-slate-400 mt-0.5" />
+                <span className="text-slate-700 dark:text-slate-300">
+                  {facility.operating_hours}
+                </span>
               </div>
             )}
 
-            {/* Contact Info - from JSON array */}
+            {/* Main Contact (First one only) */}
             {facility.contact_json &&
               Array.isArray(facility.contact_json) &&
               facility.contact_json.length > 0 && (
-                <div className="space-y-2 pt-2">
-                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
-                    Staff Contacts
-                  </p>
-                  <div className="space-y-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
-                    {facility.contact_json
-                      .slice(0, 2)
-                      .map((contact: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-2 pb-2 last:pb-0 border-b border-slate-200 dark:border-slate-700 last:border-0"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                              {contact.name || contact.role}
-                            </p>
-                            {contact.role && contact.name && (
-                              <p className="text-xs text-slate-600 dark:text-slate-400">
-                                {contact.role}
-                              </p>
-                            )}
-                            {contact.phone && (
-                              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">
-                                {contact.phone}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    {facility.contact_json.length > 2 && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 pt-2 font-medium">
-                        +{facility.contact_json.length - 2} more contacts
+                <div className="flex gap-2 text-sm">
+                  <Phone className="h-4 w-4 flex-shrink-0 text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900 dark:text-white">
+                      {facility.contact_json[0].name ||
+                        facility.contact_json[0].role}
+                    </p>
+                    {facility.contact_json[0].phone && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        {facility.contact_json[0].phone}
                       </p>
                     )}
                   </div>
                 </div>
               )}
 
-            {/* Services & YAKAP Status */}
-            {(facility.general_services ||
-              facility.specialized_services ||
-              facility.yakap_accredited) && (
-              <div className="space-y-2 pt-2">
-                <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">
-                  Services
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {facility.yakap_accredited && (
-                    <Badge className="bg-green-600 hover:bg-green-700 text-white">
-                      ✓ YAKAP Accredited
-                    </Badge>
-                  )}
-                  {facility.general_services && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                    >
-                      General
-                    </Badge>
-                  )}
-                  {facility.specialized_services && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
-                    >
-                      Specialized
-                    </Badge>
-                  )}
-                </div>
-              </div>
+            {/* YAKAP Badge Only */}
+            {facility.yakap_accredited && (
+              <Badge className="bg-green-600 text-white w-fit">
+                ✓ YAKAP Accredited
+              </Badge>
             )}
           </CardContent>
-
-          {/* Footer Button */}
-          <div className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-6 py-3">
+          <div className="border-t border-slate-200 dark:border-slate-700 px-4 py-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onViewDetails?.(facility.id)}
-              className="w-full gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+              onClick={() => {
+                console.log("[FacilitiesGrid] Clicked View Details for facility:", facility.id, facility.name);
+                onViewDetails?.(facility.id);
+              }}
+              className="w-full text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
             >
-              View Details <ChevronRight className="h-4 w-4" />
+              View Details
             </Button>
           </div>
         </Card>
