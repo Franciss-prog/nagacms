@@ -84,19 +84,17 @@ export interface HealthFacility {
   id: string;
   name: string;
   barangay: string;
-  latitude: number;
-  longitude: number;
-  operating_hours?: {
-    start: string;
-    end: string;
-  };
-  contact_json: {
-    phone?: string;
-    email?: string;
-    address?: string;
-  };
-  created_at: string;
-  updated_at: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  operating_hours?: string;
+  contact_json?: any; // Array of staff contacts or object with phone/email
+  general_services?: string;
+  specialized_services?: string;
+  service_capability?: string;
+  yakap_accredited?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface FacilitySchedule {

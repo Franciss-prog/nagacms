@@ -2,10 +2,24 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { getSession } from "@/lib/auth";
-import { getFacilities } from "@/lib/queries/facilities";
+import { getFacilities } from "@/lib/queries/services";
 import { FacilitiesGrid } from "@/components/facilities/facilities-grid";
 import { Card, CardContent } from "@/components/ui/card";
-import type { HealthFacility } from "@/lib/types";
+
+interface HealthFacility {
+  id: string;
+  name: string;
+  barangay: string;
+  address: string;
+  operating_hours?: string;
+  contact_json?: any;
+  general_services?: string;
+  specialized_services?: string;
+  service_capability?: string;
+  yakap_accredited?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface PageState {
   facilities: HealthFacility[];
@@ -31,15 +45,13 @@ export default function FacilitiesPage() {
         return;
       }
 
-      const { data } = await getFacilities(
-        session.user.assigned_barangay,
-        session.user.role === "admin",
-        { limit: 50 },
-      );
+      // Fetch all facilities (show to all users)
+      const facilities = await getFacilities();
 
+      console.log("[fetchFacilities] Retrieved facilities:", facilities);
       setState((prev) => ({
         ...prev,
-        facilities: data,
+        facilities: facilities as HealthFacility[],
         isLoading: false,
       }));
     } catch (error) {
@@ -65,20 +77,25 @@ export default function FacilitiesPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Health Facilities
         </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Manage barangay health centers and their schedules
+        <p className="text-lg text-slate-600 dark:text-slate-400">
+          View and manage barangay health centers
         </p>
       </div>
 
-      <FacilitiesGrid
-        facilities={state.facilities}
-        isLoading={state.isLoading}
-        onViewDetails={handleViewDetails}
-      />
+      <div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          {state.facilities.length} facilities available
+        </p>
+        <FacilitiesGrid
+          facilities={state.facilities}
+          isLoading={state.isLoading}
+          onViewDetails={handleViewDetails}
+        />
+      </div>
 
       {/* Facility Details (if selected) */}
       {state.selectedFacility && (
@@ -112,7 +129,11 @@ export default function FacilitiesPage() {
                       Phone
                     </p>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                      {state.selectedFacility.contact_json.phone}
+                      {typeof state.selectedFacility.contact_json ===
+                        "object" &&
+                      !Array.isArray(state.selectedFacility.contact_json)
+                        ? state.selectedFacility.contact_json.phone
+                        : "N/A"}
                     </p>
                   </div>
                 )}
@@ -122,8 +143,7 @@ export default function FacilitiesPage() {
                       Operating Hours
                     </p>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                      {state.selectedFacility.operating_hours.start} -{" "}
-                      {state.selectedFacility.operating_hours.end}
+                      {state.selectedFacility.operating_hours}
                     </p>
                   </div>
                 )}
