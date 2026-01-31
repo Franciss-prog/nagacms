@@ -1,71 +1,72 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getYakakApplications } from "@/lib/queries/yakap";
 import { getResidents } from "@/lib/queries/residents";
-import { YakakTable } from "@/components/yakap/yakap-table";
-import { YakakDetailDialog } from "@/components/yakap/yakap-detail-dialog";
 import { YakakForm, type YakakFormData } from "@/components/yakap/yakap-form";
+import { YakakApplicationsList } from "@/components/yakap/yakap-applications-list";
 import { createYakakAction } from "@/lib/actions/yakap";
-import type { YakakApplication, Resident, User } from "@/lib/types";
+import type { Resident, User } from "@/lib/types";
 
 interface PageState {
-  applications: (YakakApplication & { resident?: Resident; approver?: User })[];
+  applications: any[];
   residents: Resident[];
   isLoading: boolean;
   isLoadingResidents: boolean;
-  selectedStatus: string;
-  selectedApplication:
-    | (YakakApplication & { resident?: Resident; approver?: User })
-    | null;
-  isDialogOpen: boolean;
+  selectedApplication?: any;
+  isDialogOpen?: boolean;
 }
 
 export default function YakakPage() {
+  const router = useRouter();
   const [state, setState] = useState<PageState>({
     applications: [],
     residents: [],
     isLoading: true,
     isLoadingResidents: true,
-    selectedStatus: "all",
-    selectedApplication: null,
-    isDialogOpen: false,
   });
 
   // Fetch applications
   const fetchApplications = useCallback(async () => {
+    console.log("[yakap-page] Fetching applications...");
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       const session = await getSession();
+      console.log("[yakap-page] Session:", session);
+
       if (!session) {
+        console.warn("[yakap-page] No session found");
         setState((prev) => ({ ...prev, isLoading: false }));
         return;
       }
 
-      const { data } = await getYakakApplications(
-        session.user.assigned_barangay,
+      // Call without barangay filter - let admins see all, others see all by default
+      console.log(
+        "[yakap-page] Calling getYakakApplications, user role:",
+        session.user.role,
+      );
+      const result = await getYakakApplications(
+        undefined, // Don't filter by barangay
         session.user.role === "admin",
         {
-          status:
-            state.selectedStatus === "all"
-              ? undefined
-              : (state.selectedStatus as any),
-          limit: 50,
+          limit: 100,
         },
       );
 
+      console.log("[yakap-page] Result:", result);
       setState((prev) => ({
         ...prev,
-        applications: data,
+        applications: result.data || [],
         isLoading: false,
       }));
     } catch (error) {
       console.error("[fetchApplications]", error);
       setState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [state.selectedStatus]);
+  }, []);
 
   // Fetch residents
   const fetchResidents = useCallback(async () => {
@@ -78,14 +79,20 @@ export default function YakakPage() {
         return;
       }
 
-      const { data } = await getResidents({
+      if (!session.user.assigned_barangay) {
+        // Skip loading residents if no barangay assigned
+        setState((prev) => ({ ...prev, isLoadingResidents: false }));
+        return;
+      }
+
+      const result = await getResidents({
         barangay: session.user.assigned_barangay,
         limit: 100,
       });
 
       setState((prev) => ({
         ...prev,
-        residents: data,
+        residents: result.data || [],
         isLoadingResidents: false,
       }));
     } catch (error) {
@@ -100,26 +107,11 @@ export default function YakakPage() {
     fetchResidents();
   }, [fetchApplications, fetchResidents]);
 
-  const handleStatusChange = (status: string) => {
-    setState((prev) => ({ ...prev, selectedStatus: status }));
-  };
-
-  const handleViewDetails = (id: string) => {
-    const app = state.applications.find((a) => a.id === id);
-    if (app) {
-      setState((prev) => ({
-        ...prev,
-        selectedApplication: app,
-        isDialogOpen: true,
-      }));
-    }
-  };
-
   const handleCloseDialog = () => {
     setState((prev) => ({
       ...prev,
       isDialogOpen: false,
-      selectedApplication: null,
+      selectedApplication: undefined,
     }));
   };
 
@@ -143,12 +135,11 @@ export default function YakakPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-          YAKAP Applications (BHW Approval)
+          YAKAP Application Form
         </h1>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          BHW interface for reviewing, verifying, and approving YAKAP residence
-          applications. Fields are aligned with PhilHealth Konsulta Registration
-          requirements.
+          Submit resident information for YAKAP (Kalusugan Para sa Lahat) health
+          insurance coverage.
         </p>
       </div>
 
@@ -160,19 +151,10 @@ export default function YakakPage() {
         onSuccess={handleFormSuccess}
       />
 
-      {/* YAKAP Applications Table */}
-      <YakakTable
+      {/* YAKAP Applications List - Shows submitted applications */}
+      <YakakApplicationsList
         applications={state.applications}
         isLoading={state.isLoading}
-        onStatusChange={handleStatusChange}
-        onViewDetails={handleViewDetails}
-      />
-
-      <YakakDetailDialog
-        application={state.selectedApplication}
-        isOpen={state.isDialogOpen}
-        onClose={handleCloseDialog}
-        onApprovalChange={handleApprovalChange}
       />
     </div>
   );

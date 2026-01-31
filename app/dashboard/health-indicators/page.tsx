@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HealthIndicatorsDisplay } from "@/components/dashboard/health-indicators-display";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
   BarChart,
   Bar,
@@ -23,7 +26,13 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { TrendingUp, Users, Heart, Baby, AlertCircle } from "lucide-react";
+import { TrendingUp, Users, Heart, AlertCircle } from "lucide-react";
+import {
+  getHealthIndicatorStats,
+  getIndicatorsByType,
+  getIndicatorsByStatus,
+  getLatestIndicatorsByType,
+} from "@/lib/queries/health-indicators";
 
 // Mock analytics data
 const immunizationData = [
@@ -85,6 +94,43 @@ const KPICard = ({ title, value, icon, change, color }: KPICard) => (
 );
 
 export default function HealthIndicatorsPage() {
+  const [stats, setStats] = useState({
+    totalRecords: 0,
+    criticalCount: 0,
+    warningCount: 0,
+    normalCount: 0,
+  });
+  const [indicatorsByType, setIndicatorsByType] = useState<any[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
+  const [latestIndicators, setLatestIndicators] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [statsData, typeData, statusData, latestData] = await Promise.all(
+          [
+            getHealthIndicatorStats(),
+            getIndicatorsByType(),
+            getIndicatorsByStatus(),
+            getLatestIndicatorsByType(),
+          ],
+        );
+
+        setStats(statsData);
+        setIndicatorsByType(typeData);
+        setStatusDistribution(statusData);
+        setLatestIndicators(latestData);
+      } catch (error) {
+        console.error("Error loading health indicator data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
@@ -99,50 +145,56 @@ export default function HealthIndicatorsPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Total Residents"
-          value="342"
-          icon={<Users className="h-6 w-6 text-blue-600" />}
-          change="↑ 12 this month"
+          title="Total Health Records"
+          value={loading ? "..." : stats.totalRecords}
+          icon={<Heart className="h-6 w-6 text-blue-600" />}
+          change="All indicators"
           color="bg-blue-50 dark:bg-blue-950"
         />
         <KPICard
-          title="Immunization Rate"
-          value="88%"
+          title="Normal Status"
+          value={loading ? "..." : stats.normalCount}
           icon={<Heart className="h-6 w-6 text-green-600" />}
-          change="↑ 3% from last month"
+          change="Healthy readings"
           color="bg-green-50 dark:bg-green-950"
         />
         <KPICard
-          title="Pregnant Women"
-          value="32"
-          icon={<Baby className="h-6 w-6 text-pink-600" />}
-          change="Active in prenatal"
-          color="bg-pink-50 dark:bg-pink-950"
+          title="Warning Status"
+          value={loading ? "..." : stats.warningCount}
+          icon={<AlertCircle className="h-6 w-6 text-yellow-600" />}
+          change="Requires attention"
+          color="bg-yellow-50 dark:bg-yellow-950"
         />
         <KPICard
-          title="Health Concerns"
-          value="18"
-          icon={<AlertCircle className="h-6 w-6 text-amber-600" />}
-          change="Pending review"
-          color="bg-amber-50 dark:bg-amber-950"
+          title="Critical Status"
+          value={loading ? "..." : stats.criticalCount}
+          icon={<AlertCircle className="h-6 w-6 text-red-600" />}
+          change="Immediate action"
+          color="bg-red-50 dark:bg-red-950"
         />
       </div>
 
-      {/* Charts */}
+      {/* Charts Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Immunization Trend */}
+        {/* Health Indicators by Type */}
         <Card>
           <CardHeader>
-            <CardTitle>Immunization Rate Trend</CardTitle>
+            <CardTitle>Health Indicators by Type</CardTitle>
             <CardDescription>
-              Monthly immunization coverage percentage
+              Distribution of health indicator types
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={immunizationData}>
+              <BarChart data={indicatorsByType}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" />
+                <XAxis
+                  dataKey="type"
+                  stroke="#64748b"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                />
                 <YAxis stroke="#64748b" />
                 <Tooltip
                   contentStyle={{
@@ -150,29 +202,23 @@ export default function HealthIndicatorsPage() {
                     border: "1px solid #64748b",
                   }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="percentage"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ fill: "#10b981", r: 4 }}
-                />
-              </LineChart>
+                <Bar dataKey="count" fill="#6366f1" />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Gender Distribution */}
+        {/* Status Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Gender Distribution</CardTitle>
-            <CardDescription>Resident population by gender</CardDescription>
+            <CardTitle>Status Distribution</CardTitle>
+            <CardDescription>Health indicators by status</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={genderDistribution}
+                  data={statusDistribution}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -181,7 +227,7 @@ export default function HealthIndicatorsPage() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {genderDistribution.map((entry, index) => (
+                  {statusDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -192,63 +238,47 @@ export default function HealthIndicatorsPage() {
         </Card>
       </div>
 
-      {/* Age Group Distribution */}
+      {/* Latest Indicators by Type */}
       <Card>
         <CardHeader>
-          <CardTitle>Age Group Distribution</CardTitle>
-          <CardDescription>Population breakdown by age groups</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ageGroups}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="group" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1e293b",
-                  border: "1px solid #64748b",
-                }}
-              />
-              <Bar dataKey="count" fill="#6366f1" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Program Participation */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Program Participation</CardTitle>
+          <CardTitle>Latest Health Indicators</CardTitle>
           <CardDescription>
-            Active participants in health programs
+            Most recent reading for each indicator type
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {programParticipation.map((program, index) => {
-              const maxParticipants = Math.max(
-                ...programParticipation.map((p) => p.participants),
-              );
-              const percentage = (program.participants / maxParticipants) * 100;
-
-              return (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-900 dark:text-white">
-                      {program.program}
-                    </span>
-                    <Badge variant="outline">{program.participants}</Badge>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
+            {latestIndicators.map((indicator, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between border-b pb-4 last:border-0"
+              >
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">
+                    {indicator.type}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {indicator.unit}
+                  </p>
                 </div>
-              );
-            })}
+                <div className="flex items-center gap-3">
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {indicator.value}
+                  </p>
+                  <Badge
+                    variant={
+                      indicator.status === "normal"
+                        ? "default"
+                        : indicator.status === "warning"
+                          ? "secondary"
+                          : "destructive"
+                    }
+                  >
+                    {indicator.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -294,6 +324,11 @@ export default function HealthIndicatorsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Health Indicators Management Section */}
+      <div className="mt-8 border-t pt-8">
+        <HealthIndicatorsDisplay />
+      </div>
     </div>
   );
 }

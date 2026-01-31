@@ -12,23 +12,14 @@ const supabase = createClient(
 // Validation schemas
 const createHealthIndicatorSchema = z.object({
   resident_id: z.string().uuid("Invalid resident ID"),
-  indicator_type: z.enum([
-    "blood_pressure",
-    "temperature",
-    "weight",
-    "height",
-    "bmi",
-    "heart_rate",
-    "glucose",
-    "cholesterol",
-    "oxygen_saturation",
-    "respiratory_rate",
-  ]),
+  indicator_type: z.string().min(1, "Indicator type required"),
   value: z.number().positive("Value must be positive"),
   unit: z.string().min(1, "Unit is required"),
   status: z.enum(["normal", "warning", "critical"]).optional(),
   notes: z.string().optional(),
 });
+
+const bulkCreateHealthIndicatorsSchema = z.array(createHealthIndicatorSchema);
 
 const createVitalSignsSchema = z.object({
   resident_id: z.string().uuid("Invalid resident ID"),
@@ -498,5 +489,230 @@ export async function updateDiseaseCaseOutcomeAction(
   } catch (error) {
     console.error("Error:", error);
     return { error: "Failed to update disease case" };
+  }
+}
+
+// ============================================================================
+// BULK OPERATIONS FOR HEALTH INDICATORS
+// ============================================================================
+
+/**
+ * Get health indicators for a resident with filters
+ */
+export async function getHealthIndicatorsAction(
+  residentId: string,
+  options?: { type?: string; limit?: number; offset?: number },
+): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  const session = await getSession();
+
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const limit = options?.limit || 50;
+    const offset = options?.offset || 0;
+
+    let query = supabase
+      .from("health_indicators")
+      .select("*")
+      .eq("resident_id", residentId)
+      .order("recorded_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (options?.type) {
+      query = query.eq("indicator_type", options.type);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error fetching health indicators:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Bulk insert health indicators from CSV/array data
+ * Perfect for importing disease surveillance data
+ */
+export async function bulkCreateHealthIndicatorsAction(
+  indicators: z.infer<typeof bulkCreateHealthIndicatorsSchema>,
+): Promise<{ success: boolean; error?: string; count?: number }> {
+  const session = await getSession();
+
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const validation = bulkCreateHealthIndicatorsSchema.safeParse(indicators);
+  if (!validation.success) {
+    return {
+      success: false,
+      error: `Validation error: ${validation.error.message}`,
+    };
+  }
+
+  try {
+    const validatedData = validation.data;
+
+    // Transform data to include user ID and timestamp
+    const insertData = validatedData.map((item) => ({
+      ...item,
+      status: item.status || "normal",
+      recorded_by: session.user?.id,
+      recorded_at: new Date().toISOString(),
+    }));
+
+    const { error, data } = await supabase
+      .from("health_indicators")
+      .insert(insertData)
+      .select();
+
+    if (error) throw error;
+
+    return { success: true, count: data?.length || 0 };
+  } catch (error) {
+    console.error("Error bulk creating health indicators:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Get health indicator statistics by type for a resident
+ */
+export async function getHealthIndicatorStatsAction(
+  residentId: string,
+): Promise<{
+  success: boolean;
+  stats?: Record<string, any>;
+  error?: string;
+}> {
+  const session = await getSession();
+
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("indicator_type, value, status, recorded_at")
+      .eq("resident_id", residentId)
+      .order("recorded_at", { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+
+    // Group by indicator type and calculate stats
+    const stats: Record<string, any> = {};
+    data?.forEach((indicator) => {
+      const type = indicator.indicator_type;
+      if (!stats[type]) {
+        stats[type] = {
+          count: 0,
+          values: [],
+          statuses: { normal: 0, warning: 0, critical: 0 },
+          latest: null,
+        };
+      }
+      stats[type].count += 1;
+      stats[type].values.push(indicator.value);
+      stats[type].statuses[indicator.status]++;
+      if (
+        !stats[type].latest ||
+        new Date(indicator.recorded_at) >
+          new Date(stats[type].latest.recorded_at)
+      ) {
+        stats[type].latest = indicator;
+      }
+    });
+
+    // Calculate averages
+    Object.keys(stats).forEach((type) => {
+      const values = stats[type].values;
+      stats[type].average =
+        values.reduce((a: number, b: number) => a + b, 0) / values.length;
+      stats[type].min = Math.min(...values);
+      stats[type].max = Math.max(...values);
+      delete stats[type].values; // Remove raw values from response
+    });
+
+    return { success: true, stats };
+  } catch (error) {
+    console.error("Error fetching health indicator stats:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Get all health indicators for barangay with pagination
+ */
+export async function getBarangayHealthIndicatorsAction(
+  barangay: string,
+  options?: { limit?: number; offset?: number },
+): Promise<{
+  success: boolean;
+  data?: any[];
+  total?: number;
+  error?: string;
+}> {
+  const session = await getSession();
+
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const limit = options?.limit || 100;
+    const offset = options?.offset || 0;
+
+    // First get all residents in barangay
+    const { data: residents, error: residentsError } = await supabase
+      .from("residents")
+      .select("id")
+      .eq("barangay", barangay);
+
+    if (residentsError) throw residentsError;
+
+    const residentIds = residents?.map((r) => r.id) || [];
+
+    if (residentIds.length === 0) {
+      return { success: true, data: [], total: 0 };
+    }
+
+    // Get health indicators for all residents
+    const { data, error, count } = await supabase
+      .from("health_indicators")
+      .select("*", { count: "exact" })
+      .in("resident_id", residentIds)
+      .order("recorded_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return { success: true, data, total: count || 0 };
+  } catch (error) {
+    console.error("Error fetching barangay health indicators:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

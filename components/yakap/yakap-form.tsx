@@ -18,8 +18,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Loader2, CheckCircle2, X } from "lucide-react";
 import type { Resident } from "@/lib/types";
+
+const BARANGAYS = [
+  "ABELLA",
+  "DAYANGDANG",
+  "PEÑAFRANCIA",
+  "BAGUMBAYAN NORTE",
+  "DEL ROSARIO",
+  "SABANG",
+  "BAGUMBAYAN SUR",
+  "DINAGA",
+  "SAN FELIPE",
+  "BALATAS",
+  "IGUALDAD INTERIOR",
+  "SAN FRANCISCO (POB.)",
+  "CALAUAG",
+  "LERMA",
+  "SAN ISIDRO",
+  "CARARAYAN",
+  "LIBOTON",
+  "SANTA CRUZ",
+  "CAROLINA",
+  "MABOLO",
+  "TABUCO",
+  "CONCEPCION GRANDE",
+  "PACOL",
+  "TINAGO",
+  "CONCEPCION PEQUEÑO",
+  "PANICUASON",
+  "TRIANGULO",
+];
 
 interface YakakFormProps {
   residents: Resident[];
@@ -29,7 +59,8 @@ interface YakakFormProps {
 }
 
 export interface YakakFormData {
-  resident_id: string;
+  barangay: string;
+  resident_name: string;
   philhealth_no?: string;
   membership_type: "individual" | "family" | "senior" | "pwd";
 }
@@ -43,30 +74,34 @@ export function YakakForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(
-    null,
-  );
+  const [barangaySearch, setBarangaySearch] = useState("");
+  const [showBarangayDropdown, setShowBarangayDropdown] = useState(false);
   const [formData, setFormData] = useState<YakakFormData>({
-    resident_id: "",
+    barangay: "",
+    resident_name: "",
     philhealth_no: "",
     membership_type: "individual",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Filter barangays based on search
+  const filteredBarangays = BARANGAYS.filter((b) =>
+    b.toLowerCase().includes(barangaySearch.toLowerCase()),
+  );
+
   useEffect(() => {
-    if (formData.resident_id) {
-      const resident = residents.find((r) => r.id === formData.resident_id);
-      setSelectedResident(resident || null);
-    } else {
-      setSelectedResident(null);
-    }
-  }, [formData.resident_id, residents]);
+    // Reset resident name when barangay changes
+    setFormData((prev) => ({ ...prev, resident_name: "" }));
+  }, [formData.barangay]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.resident_id) {
-      newErrors.resident_id = "Please select a resident";
+    if (!formData.barangay) {
+      newErrors.barangay = "Please select a barangay";
+    }
+    if (!formData.resident_name.trim()) {
+      newErrors.resident_name = "Please enter resident name";
     }
     if (!formData.membership_type) {
       newErrors.membership_type = "Please select membership type";
@@ -93,11 +128,13 @@ export function YakakForm({
       }
       setSuccess(true);
       setFormData({
-        resident_id: "",
+        barangay: "",
+        resident_name: "",
         philhealth_no: "",
         membership_type: "individual",
       });
-      setSelectedResident(null);
+      setBarangaySearch("");
+      setShowBarangayDropdown(false);
 
       setTimeout(() => {
         setSuccess(false);
@@ -121,75 +158,95 @@ export function YakakForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleFormSubmit} className="space-y-6">
-          {/* Resident Selection */}
+          {/* Barangay Selection with Search */}
           <div className="space-y-2">
-            <Label htmlFor="resident_id">Select Resident *</Label>
-            <Select
-              value={formData.resident_id}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, resident_id: value }))
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a resident from the barangay" />
-              </SelectTrigger>
-              <SelectContent>
-                {residents.map((resident) => (
-                  <SelectItem key={resident.id} value={resident.id}>
-                    {resident.full_name}{" "}
-                    {resident.barangay && `(${resident.barangay})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.resident_id && (
-              <p className="text-sm text-red-600">{errors.resident_id}</p>
+            <Label htmlFor="barangay">Barangay *</Label>
+            <div className="relative">
+              <div
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 cursor-pointer hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-950"
+                onClick={() => setShowBarangayDropdown(!showBarangayDropdown)}
+              >
+                {formData.barangay ? (
+                  <div className="flex items-center justify-between">
+                    <span>{formData.barangay}</span>
+                    <X
+                      className="h-4 w-4 text-gray-500 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFormData((prev) => ({ ...prev, barangay: "" }));
+                        setBarangaySearch("");
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span className="text-gray-500">Select a barangay...</span>
+                )}
+              </div>
+
+              {showBarangayDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 dark:bg-gray-950 dark:border-gray-600">
+                  <Input
+                    placeholder="Search barangay..."
+                    className="m-2 border rounded"
+                    value={barangaySearch}
+                    onChange={(e) => setBarangaySearch(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredBarangays.length > 0 ? (
+                      filteredBarangays.map((barangay) => (
+                        <div
+                          key={barangay}
+                          className="px-3 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer text-sm"
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, barangay }));
+                            setShowBarangayDropdown(false);
+                            setBarangaySearch("");
+                          }}
+                        >
+                          {barangay}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No barangays found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {errors.barangay && (
+              <p className="text-sm text-red-600">{errors.barangay}</p>
             )}
           </div>
 
-          {/* Selected Resident Info */}
-          {selectedResident && (
-            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Full Name
-                    </p>
-                    <p className="font-medium">{selectedResident.full_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">Barangay</p>
-                    <p className="font-medium">{selectedResident.barangay}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Birth Date
-                    </p>
-                    <p className="font-medium">
-                      {selectedResident.birth_date || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">Gender</p>
-                    <p className="font-medium">
-                      {selectedResident.sex || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">Contact</p>
-                    <p className="font-medium">
-                      {selectedResident.contact_number || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 dark:text-gray-400">Purok</p>
-                    <p className="font-medium">{selectedResident.purok}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Resident Selection */}
+          {/* Resident Name Input */}
+          <div className="space-y-2">
+            <Label htmlFor="resident_name">Resident Name *</Label>
+            {!formData.barangay ? (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md text-sm text-blue-700 dark:text-blue-200">
+                Please select a barangay first
+              </div>
+            ) : (
+              <Input
+                id="resident_name"
+                placeholder="Enter full name of resident"
+                value={formData.resident_name}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    resident_name: e.target.value,
+                  }))
+                }
+                className="w-full"
+              />
+            )}
+            {errors.resident_name && (
+              <p className="text-sm text-red-600">{errors.resident_name}</p>
+            )}
+          </div>
 
           {/* PhilHealth Number */}
           <div className="space-y-2">
@@ -275,11 +332,13 @@ export function YakakForm({
               variant="outline"
               onClick={() => {
                 setFormData({
-                  resident_id: "",
+                  barangay: "",
+                  resident_name: "",
                   philhealth_no: "",
                   membership_type: "individual",
                 });
-                setSelectedResident(null);
+                setBarangaySearch("");
+                setShowBarangayDropdown(false);
                 setError(null);
                 setSuccess(false);
                 setErrors({});

@@ -64,7 +64,9 @@ export type YakakStatus = "pending" | "approved" | "returned" | "rejected";
 
 export interface YakakApplication {
   id: string;
-  resident_id: string;
+  resident_id?: string;
+  resident_name: string;
+  barangay: string;
   membership_type: MembershipType;
   philhealth_no?: string;
   status: YakakStatus;

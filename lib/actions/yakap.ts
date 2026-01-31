@@ -8,7 +8,8 @@ import { z } from "zod";
  * Server Action: Create new YAKAP application
  */
 export async function createYakakAction(formData: {
-  resident_id: string;
+  barangay: string;
+  resident_name: string;
   membership_type: "individual" | "family" | "senior" | "pwd";
   philhealth_no?: string;
 }): Promise<{ success: boolean; error?: string; id?: string }> {
@@ -20,7 +21,8 @@ export async function createYakakAction(formData: {
 
   // Validate input
   const schema = z.object({
-    resident_id: z.string().uuid(),
+    barangay: z.string().min(1),
+    resident_name: z.string().min(1, "Resident name is required"),
     membership_type: z.enum(["individual", "family", "senior", "pwd"]),
     philhealth_no: z.string().optional(),
   });
@@ -30,42 +32,19 @@ export async function createYakakAction(formData: {
     return { success: false, error: "Invalid request data" };
   }
 
-  const { resident_id, membership_type, philhealth_no } = validation.data;
+  const { barangay, resident_name, membership_type, philhealth_no } =
+    validation.data;
 
   try {
     const supabase = await createServerSupabaseClient();
 
-    // Check if resident exists
-    const { data: resident, error: residentError } = await supabase
-      .from("residents")
-      .select("id, barangay")
-      .eq("id", resident_id)
-      .single();
-
-    if (residentError || !resident) {
-      return { success: false, error: "Resident not found" };
-    }
-
-    // Check for duplicate applications for the same resident
-    const { data: existing } = await supabase
-      .from("yakap_applications")
-      .select("id")
-      .eq("resident_id", resident_id)
-      .eq("status", "pending")
-      .single();
-
-    if (existing) {
-      return {
-        success: false,
-        error: "This resident already has a pending YAKAP application",
-      };
-    }
-
-    // Create new YAKAP application
+    // Create new YAKAP application with resident name and barangay
+    // No need to check for existing resident since we're storing the name directly
     const { data: newApp, error: createError } = await supabase
       .from("yakap_applications")
       .insert({
-        resident_id,
+        resident_name: resident_name,
+        barangay: barangay,
         membership_type,
         philhealth_no: philhealth_no || null,
         status: "pending",

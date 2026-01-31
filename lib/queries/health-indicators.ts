@@ -476,3 +476,270 @@ export async function getResidentDiseaseHistory(residentId: string) {
     return [];
   }
 }
+// ============================================================================
+// HEALTH INDICATORS ANALYTICS (For Dashboard)
+// ============================================================================
+
+export async function getAllHealthIndicators(
+  barangay?: string,
+  indicator_type?: string,
+  status?: string,
+  limit = 100,
+  offset = 0,
+) {
+  try {
+    let query = supabase
+      .from("health_indicators")
+      .select("*", { count: "exact" })
+      .order("recorded_at", { ascending: false });
+
+    if (barangay) {
+      query = query.ilike("notes", `%${barangay}%`);
+    }
+
+    if (indicator_type) {
+      query = query.eq("indicator_type", indicator_type);
+    }
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    const { data, count, error } = await query.range(
+      offset,
+      offset + limit - 1,
+    );
+
+    if (error) throw error;
+    return { data: data || [], count: count || 0, error: null };
+  } catch (error) {
+    console.error("Error fetching health indicators:", error);
+    return { data: [], count: 0, error };
+  }
+}
+
+// Get health indicators by barangay
+export async function getHealthIndicatorsByBarangay(barangay: string) {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("*")
+      .ilike("notes", `%${barangay}%`)
+      .order("recorded_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching barangay health indicators:", error);
+    return [];
+  }
+}
+
+// Get critical and warning cases
+export async function getCriticalAndWarningCases() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("*")
+      .in("status", ["warning", "critical"])
+      .order("recorded_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching critical cases:", error);
+    return [];
+  }
+}
+
+// Get indicator statistics across all data
+export async function getIndicatorStats() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("indicator_type, value, unit, status");
+
+    if (error) throw error;
+
+    // Process data to calculate stats by type
+    const stats: { [key: string]: any } = {};
+
+    data?.forEach((record: any) => {
+      const type = record.indicator_type;
+      if (!stats[type]) {
+        stats[type] = {
+          indicator_type: type,
+          total_records: 0,
+          values: [],
+          unit: record.unit,
+          normal_count: 0,
+          warning_count: 0,
+          critical_count: 0,
+        };
+      }
+
+      stats[type].total_records++;
+      stats[type].values.push(record.value);
+
+      if (record.status === "normal") stats[type].normal_count++;
+      else if (record.status === "warning") stats[type].warning_count++;
+      else if (record.status === "critical") stats[type].critical_count++;
+    });
+
+    // Calculate aggregate values
+    const result = Object.values(stats).map((stat: any) => ({
+      ...stat,
+      average_value:
+        stat.values.length > 0
+          ? stat.values.reduce((a: number, b: number) => a + b, 0) /
+            stat.values.length
+          : 0,
+      min_value: stat.values.length > 0 ? Math.min(...stat.values) : 0,
+      max_value: stat.values.length > 0 ? Math.max(...stat.values) : 0,
+      values: undefined, // Remove raw values
+    }));
+
+    return result;
+  } catch (error) {
+    console.error("Error fetching indicator stats:", error);
+    return [];
+  }
+}
+
+// Get all unique barangays from health indicators
+export async function getBarangaysWithData() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("notes")
+      .not("notes", "is", null);
+
+    if (error) throw error;
+
+    const barangays = new Set<string>();
+    data?.forEach((record: any) => {
+      // Extract barangay from notes (format: "... - BARANGAY")
+      const match = record.notes?.match(/([A-Z ]+)$/);
+      if (match) barangays.add(match[1]);
+    });
+
+    return Array.from(barangays).sort();
+  } catch (error) {
+    console.error("Error fetching barangays:", error);
+    return [];
+  }
+}
+// Get health indicator statistics
+export async function getHealthIndicatorStats() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("status");
+
+    if (error) throw error;
+
+    const stats = {
+      totalRecords: data?.length || 0,
+      normalCount: data?.filter((r: any) => r.status === "normal").length || 0,
+      warningCount:
+        data?.filter((r: any) => r.status === "warning").length || 0,
+      criticalCount:
+        data?.filter((r: any) => r.status === "critical").length || 0,
+    };
+
+    return stats;
+  } catch (error) {
+    console.error("Error fetching health indicator stats:", error);
+    return {
+      totalRecords: 0,
+      normalCount: 0,
+      warningCount: 0,
+      criticalCount: 0,
+    };
+  }
+}
+// Get health indicators grouped by type for charts
+export async function getIndicatorsByType() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("indicator_type");
+
+    if (error) throw error;
+
+    const typeCount: { [key: string]: number } = {};
+    data?.forEach((record: any) => {
+      typeCount[record.indicator_type] =
+        (typeCount[record.indicator_type] || 0) + 1;
+    });
+
+    return Object.entries(typeCount).map(([type, count]) => ({
+      type: type.replace(/_/g, " ").toUpperCase(),
+      count,
+    }));
+  } catch (error) {
+    console.error("Error fetching indicators by type:", error);
+    return [];
+  }
+}
+
+// Get health indicators grouped by status for pie chart
+export async function getIndicatorsByStatus() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("status");
+
+    if (error) throw error;
+
+    const statusMap: {
+      [key: string]: { name: string; value: number; color: string };
+    } = {
+      normal: { name: "Normal", value: 0, color: "#10b981" },
+      warning: { name: "Warning", value: 0, color: "#f59e0b" },
+      critical: { name: "Critical", value: 0, color: "#ef4444" },
+    };
+
+    data?.forEach((record: any) => {
+      if (statusMap[record.status]) {
+        statusMap[record.status].value++;
+      }
+    });
+
+    return Object.values(statusMap).filter((item) => item.value > 0);
+  } catch (error) {
+    console.error("Error fetching indicators by status:", error);
+    return [];
+  }
+}
+
+// Get latest health indicators by type for display
+export async function getLatestIndicatorsByType() {
+  try {
+    const { data, error } = await supabase
+      .from("health_indicators")
+      .select("indicator_type, value, unit, status, recorded_at")
+      .order("recorded_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Group by indicator type and get latest value
+    const latestByType: { [key: string]: any } = {};
+    data?.forEach((record: any) => {
+      if (!latestByType[record.indicator_type]) {
+        latestByType[record.indicator_type] = record;
+      }
+    });
+
+    return Object.values(latestByType).map((item) => ({
+      type: item.indicator_type.replace(/_/g, " "),
+      value: item.value,
+      unit: item.unit,
+      status: item.status,
+    }));
+  } catch (error) {
+    console.error("Error fetching latest indicators by type:", error);
+    return [];
+  }
+}

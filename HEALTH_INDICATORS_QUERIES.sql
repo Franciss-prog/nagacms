@@ -4,6 +4,14 @@
 -- Add this to your database to support the Health-Indicators service
 -- ============================================================================
 
+-- DROP existing tables in correct dependency order (with CASCADE)
+DROP TABLE IF EXISTS public.program_beneficiaries CASCADE;
+DROP TABLE IF EXISTS public.health_programs CASCADE;
+DROP TABLE IF EXISTS public.health_indicators CASCADE;
+DROP TABLE IF EXISTS public.vital_signs_history CASCADE;
+DROP TABLE IF EXISTS public.vaccination_records CASCADE;
+DROP TABLE IF EXISTS public.disease_cases CASCADE;
+
 -- 1. HEALTH INDICATORS TABLE (Main health metrics tracking)
 CREATE TABLE public.health_indicators (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -256,3 +264,174 @@ WHERE vr.status = 'pending'
   AND vr.next_dose_date <= NOW()::date
 ORDER BY vr.next_dose_date ASC;
 */
+-- ============================================================================
+-- ANALYSIS QUERIES: HEALTH INDICATORS BY BARANGAY
+-- ============================================================================
+
+-- 1. OVERALL STATISTICS (All Barangays Combined)
+-- Overall Statistics by Indicator Type
+SELECT 
+  indicator_type,
+  COUNT(*) as total_records,
+  ROUND(AVG(value)::numeric, 2) as average_value,
+  MIN(value) as min_value,
+  MAX(value) as max_value,
+  ROUND(STDDEV(value)::numeric, 2) as std_deviation,
+  unit,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal_count,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning_count,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical_count
+FROM public.health_indicators
+GROUP BY indicator_type, unit
+ORDER BY indicator_type;
+
+-- Overall Status Distribution
+SELECT 
+  status,
+  COUNT(*) as count,
+  ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) as percentage
+FROM public.health_indicators
+GROUP BY status
+ORDER BY CASE status WHEN 'normal' THEN 1 WHEN 'warning' THEN 2 WHEN 'critical' THEN 3 END;
+
+-- ============================================================================
+-- 2. STATISTICS BY BARANGAY
+-- ============================================================================
+
+-- All Barangays Summary
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  COUNT(*) as total_indicators,
+  COUNT(DISTINCT indicator_type) as indicator_types,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical,
+  ROUND(100.0 * COUNT(CASE WHEN status = 'normal' THEN 1 END) / COUNT(*), 1) as normal_pct,
+  ROUND(100.0 * COUNT(CASE WHEN status = 'warning' THEN 1 END) / COUNT(*), 1) as warning_pct,
+  ROUND(100.0 * COUNT(CASE WHEN status = 'critical' THEN 1 END) / COUNT(*), 1) as critical_pct
+FROM public.health_indicators
+WHERE notes IS NOT NULL
+GROUP BY SUBSTRING(notes FROM '([A-Z ]+)$')
+ORDER BY critical DESC, warning DESC;
+
+-- ============================================================================
+-- 3. SPECIFIC INDICATOR ANALYSIS BY BARANGAY
+-- ============================================================================
+
+-- Blood Pressure Statistics by Barangay
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  'blood_pressure' as indicator,
+  COUNT(*) as count,
+  ROUND(AVG(value)::numeric, 1) as avg_systolic,
+  MIN(value) as min_systolic,
+  MAX(value) as max_systolic,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical
+FROM public.health_indicators
+WHERE indicator_type = 'blood_pressure' AND notes IS NOT NULL
+GROUP BY barangay
+ORDER BY avg_systolic DESC;
+
+-- Glucose Levels by Barangay
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  'glucose' as indicator,
+  COUNT(*) as count,
+  ROUND(AVG(value)::numeric, 1) as avg_glucose,
+  MIN(value) as min_glucose,
+  MAX(value) as max_glucose,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical
+FROM public.health_indicators
+WHERE indicator_type = 'glucose' AND notes IS NOT NULL
+GROUP BY barangay
+ORDER BY avg_glucose DESC;
+
+-- Cholesterol Levels by Barangay
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  'cholesterol' as indicator,
+  COUNT(*) as count,
+  ROUND(AVG(value)::numeric, 1) as avg_cholesterol,
+  MIN(value) as min_cholesterol,
+  MAX(value) as max_cholesterol,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical
+FROM public.health_indicators
+WHERE indicator_type = 'cholesterol' AND notes IS NOT NULL
+GROUP BY barangay
+ORDER BY avg_cholesterol DESC;
+
+-- ============================================================================
+-- 4. CRITICAL AND WARNING CASES BY BARANGAY
+-- ============================================================================
+
+-- Critical Cases by Barangay (People needing immediate attention)
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  indicator_type,
+  value,
+  unit,
+  recorded_at,
+  status
+FROM public.health_indicators
+WHERE status = 'critical' AND notes IS NOT NULL
+ORDER BY recorded_at DESC;
+
+-- Warning Cases by Barangay (People to monitor)
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  indicator_type,
+  COUNT(*) as warning_count,
+  ROUND(AVG(value)::numeric, 1) as avg_value
+FROM public.health_indicators
+WHERE status = 'warning' AND notes IS NOT NULL
+GROUP BY barangay, indicator_type
+ORDER BY barangay, warning_count DESC;
+
+-- ============================================================================
+-- 5. BARANGAY HEALTH RANKING
+-- ============================================================================
+
+-- Rank barangays by overall health (higher score = better health)
+SELECT 
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  COUNT(*) as total_readings,
+  COUNT(CASE WHEN status = 'normal' THEN 1 END) as normal_readings,
+  COUNT(CASE WHEN status = 'warning' THEN 1 END) as warning_readings,
+  COUNT(CASE WHEN status = 'critical' THEN 1 END) as critical_readings,
+  ROUND(((COUNT(CASE WHEN status = 'normal' THEN 1 END)::numeric / COUNT(*)) * 100), 1) as health_score,
+  CASE 
+    WHEN (COUNT(CASE WHEN status = 'normal' THEN 1 END)::numeric / COUNT(*)) >= 0.80 THEN 'EXCELLENT'
+    WHEN (COUNT(CASE WHEN status = 'normal' THEN 1 END)::numeric / COUNT(*)) >= 0.60 THEN 'GOOD'
+    WHEN (COUNT(CASE WHEN status = 'normal' THEN 1 END)::numeric / COUNT(*)) >= 0.40 THEN 'FAIR'
+    ELSE 'POOR'
+  END as health_status,
+  ROW_NUMBER() OVER (ORDER BY (COUNT(CASE WHEN status = 'normal' THEN 1 END)::numeric / COUNT(*)) DESC) as rank
+FROM public.health_indicators
+WHERE notes IS NOT NULL
+GROUP BY barangay
+ORDER BY health_score DESC;
+
+-- ============================================================================
+-- 6. TRENDS OVER TIME (Last 7 days)
+-- ============================================================================
+
+-- Average values over time for each barangay
+SELECT 
+  DATE(recorded_at) as date,
+  SUBSTRING(notes FROM '([A-Z ]+)$') as barangay,
+  indicator_type,
+  COUNT(*) as measurements,
+  ROUND(AVG(value)::numeric, 2) as daily_avg,
+  MIN(value) as daily_min,
+  MAX(value) as daily_max
+FROM public.health_indicators
+WHERE notes IS NOT NULL 
+  AND recorded_at >= NOW() - INTERVAL '7 days'
+GROUP BY DATE(recorded_at), barangay, indicator_type
+ORDER BY date DESC, barangay, indicator_type;
