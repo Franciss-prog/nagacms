@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HealthIndicatorsDisplay } from "@/components/dashboard/health-indicators-display";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
   BarChart,
   Bar,
@@ -33,38 +32,6 @@ import {
   getIndicatorsByStatus,
   getLatestIndicatorsByType,
 } from "@/lib/queries/health-indicators";
-
-// Mock analytics data
-const immunizationData = [
-  { month: "Jan", percentage: 65 },
-  { month: "Feb", percentage: 72 },
-  { month: "Mar", percentage: 78 },
-  { month: "Apr", percentage: 82 },
-  { month: "May", percentage: 85 },
-  { month: "Jun", percentage: 88 },
-];
-
-const genderDistribution = [
-  { name: "Male", value: 162, color: "#3b82f6" },
-  { name: "Female", value: 180, color: "#ec4899" },
-];
-
-const ageGroups = [
-  { group: "0-5", count: 45, color: "#ff6b6b" },
-  { group: "6-12", count: 68, color: "#ffa94d" },
-  { group: "13-18", count: 55, color: "#ffd93d" },
-  { group: "19-35", count: 98, color: "#6bcf7f" },
-  { group: "36-60", count: 87, color: "#4d96ff" },
-  { group: "60+", count: 42, color: "#d946ef" },
-];
-
-const programParticipation = [
-  { program: "YAKAP", participants: 145 },
-  { program: "Prenatal Care", participants: 32 },
-  { program: "Child Health", participants: 89 },
-  { program: "Immunization", participants: 234 },
-  { program: "Disease Prevention", participants: 78 },
-];
 
 interface KPICard {
   title: string;

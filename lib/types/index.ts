@@ -99,6 +99,27 @@ export interface HealthFacility {
   updated_at?: string;
 }
 
+export type AppointmentStatus =
+  | "available"
+  | "booked"
+  | "completed"
+  | "cancelled"
+  | "no_show";
+
+export interface Appointment {
+  id: string;
+  facility_id: string;
+  resident_id?: string;
+  appointment_date: string;
+  time_slot: string;
+  service_type?: string;
+  status: AppointmentStatus;
+  booked_at?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface FacilitySchedule {
   id: string;
   facility_id: string;

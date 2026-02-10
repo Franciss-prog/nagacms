@@ -8,7 +8,7 @@ import { getResidents } from "@/lib/queries/residents";
 import { YakakForm, type YakakFormData } from "@/components/yakap/yakap-form";
 import { YakakApplicationsList } from "@/components/yakap/yakap-applications-list";
 import { createYakakAction } from "@/lib/actions/yakap";
-import type { Resident, User } from "@/lib/types";
+import type { Resident, User, Session } from "@/lib/types";
 
 interface PageState {
   applications: any[];
@@ -17,6 +17,7 @@ interface PageState {
   isLoadingResidents: boolean;
   selectedApplication?: any;
   isDialogOpen?: boolean;
+  session: Session | null;
 }
 
 export default function YakakPage() {
@@ -26,6 +27,7 @@ export default function YakakPage() {
     residents: [],
     isLoading: true,
     isLoadingResidents: true,
+    session: null,
   });
 
   // Fetch applications
@@ -35,6 +37,7 @@ export default function YakakPage() {
 
     try {
       const session = await getSession();
+      setState((prev) => ({ ...prev, session }));
       console.log("[yakap-page] Session:", session);
 
       if (!session) {
@@ -131,6 +134,10 @@ export default function YakakPage() {
     fetchApplications(); // Refresh applications list after successful submission
   };
 
+  const isStaff =
+    state.session?.user?.role === "barangay_admin" ||
+    state.session?.user?.role === "admin";
+
   return (
     <div className="space-y-8">
       <div>
@@ -155,6 +162,8 @@ export default function YakakPage() {
       <YakakApplicationsList
         applications={state.applications}
         isLoading={state.isLoading}
+        isStaff={isStaff}
+        onStatusUpdated={fetchApplications}
       />
     </div>
   );
