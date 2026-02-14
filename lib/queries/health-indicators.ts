@@ -743,3 +743,394 @@ export async function getLatestIndicatorsByType() {
     return [];
   }
 }
+
+// ============================================================================
+// DASHBOARD QUERIES
+// ============================================================================
+
+// Get vaccination coverage statistics by barangay
+export async function getVaccinationCoverageByBarangay(year: number) {
+  try {
+    const startDate = `${year}-01-01`;
+    const endDate = `${year}-12-31`;
+
+    const { data, error } = await supabase
+      .from("vaccination_records")
+      .select(
+        `
+        id,
+        resident_id,
+        vaccine_name,
+        status,
+        residents(id, barangay)
+      `,
+      )
+      .gte("vaccine_date", startDate)
+      .lte("vaccine_date", endDate);
+
+    if (error) throw error;
+
+    // Group and calculate coverage by barangay
+    const coverage: { [key: string]: any } = {};
+
+    data?.forEach((record: any) => {
+      const barangay = record.residents?.barangay || "Unknown";
+      if (!coverage[barangay]) {
+        coverage[barangay] = {
+          barangay,
+          total: 0,
+          completed: 0,
+          pending: 0,
+          overdue: 0,
+          coverage_percentage: 0,
+        };
+      }
+      coverage[barangay].total++;
+      if (record.status === "completed") coverage[barangay].completed++;
+      else if (record.status === "pending") coverage[barangay].pending++;
+      else if (record.status === "overdue") coverage[barangay].overdue++;
+    });
+
+    // Calculate coverage percentage
+    return Object.values(coverage).map((item: any) => ({
+      ...item,
+      coverage_percentage:
+        item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0,
+    }));
+  } catch (error) {
+    console.error("Error fetching vaccination coverage by barangay:", error);
+    return [];
+  }
+}
+
+// Get maternal health visits statistics
+export async function getMaternalHealthStats(barangay?: string, year?: number) {
+  try {
+    let query = supabase.from("health_indicators").select(
+      `
+        id,
+        resident_id,
+        recorded_at,
+        status,
+        residents(id, full_name, barangay, sex)
+      `,
+    );
+
+    // Filter by indicator types related to maternal health (pregnancy-related checks)
+    query = query.or(
+      "indicator_type.eq.blood_pressure,indicator_type.eq.weight,indicator_type.eq.height",
+    );
+
+    if (barangay) {
+      query = query.eq("residents.barangay", barangay);
+    }
+
+    if (year) {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      query = query.gte("recorded_at", startDate).lte("recorded_at", endDate);
+    }
+
+    const { data, error } = await query.order("recorded_at", {
+      ascending: false,
+    });
+
+    if (error) throw error;
+
+    // Count unique maternal health visits
+    const uniqueVisits = new Set(data?.map((r: any) => r.resident_id) || []);
+
+    return {
+      total_visits: data?.length || 0,
+      unique_mothers: uniqueVisits.size,
+      critical_cases:
+        data?.filter((r: any) => r.status === "critical").length || 0,
+      warning_cases:
+        data?.filter((r: any) => r.status === "warning").length || 0,
+      normal_cases: data?.filter((r: any) => r.status === "normal").length || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching maternal health stats:", error);
+    return {
+      total_visits: 0,
+      unique_mothers: 0,
+      critical_cases: 0,
+      warning_cases: 0,
+      normal_cases: 0,
+    };
+  }
+}
+
+// Get senior citizen assistance statistics
+export async function getSeniorCitizenStats(barangay?: string, year?: number) {
+  try {
+    // Get health programs targeting senior citizens
+    let programQuery = supabase
+      .from("health_programs")
+      .select("id, program_name, barangay, program_beneficiaries(id, status)");
+
+    if (barangay) {
+      programQuery = programQuery.eq("barangay", barangay);
+    }
+
+    const { data: programs, error: progError } = await programQuery;
+    if (progError) throw progError;
+
+    // Get health indicators for elderly population (age-related)
+    let indicatorQuery = supabase.from("health_indicators").select(
+      `
+        id,
+        resident_id,
+        indicator_type,
+        status,
+        recorded_at,
+        residents(id, birth_date, barangay)
+      `,
+    );
+
+    // Include relevant indicators for senior health
+    const indicatorTypes = [
+      "blood_pressure",
+      "heart_rate",
+      "cholesterol",
+      "glucose",
+    ];
+
+    if (barangay) {
+      indicatorQuery = indicatorQuery.eq("residents.barangay", barangay);
+    }
+
+    if (year) {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      indicatorQuery = indicatorQuery
+        .gte("recorded_at", startDate)
+        .lte("recorded_at", endDate);
+    }
+
+    const { data: indicators, error: indError } = await indicatorQuery;
+    if (indError) throw indError;
+
+    // Calculate statistics
+    let totalBeneficiaries = 0;
+    const programStatus: { [key: string]: number } = {};
+
+    programs?.forEach((program: any) => {
+      program.program_beneficiaries?.forEach((b: any) => {
+        totalBeneficiaries++;
+        programStatus[b.status] = (programStatus[b.status] || 0) + 1;
+      });
+    });
+
+    return {
+      total_seniors_assisted: totalBeneficiaries,
+      active_assistance: programStatus["active"] || 0,
+      completed_assistance: programStatus["completed"] || 0,
+      total_health_checks: indicators?.length || 0,
+      critical_cases:
+        indicators?.filter((i: any) => i.status === "critical").length || 0,
+      warning_cases:
+        indicators?.filter((i: any) => i.status === "warning").length || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching senior citizen stats:", error);
+    return {
+      total_seniors_assisted: 0,
+      active_assistance: 0,
+      completed_assistance: 0,
+      total_health_checks: 0,
+      critical_cases: 0,
+      warning_cases: 0,
+    };
+  }
+}
+
+// Get pending health interventions
+export async function getPendingHealthInterventions(barangay?: string) {
+  try {
+    let query = supabase
+      .from("health_indicators")
+      .select(
+        `
+        id,
+        resident_id,
+        indicator_type,
+        value,
+        unit,
+        status,
+        recorded_at,
+        residents(id, full_name, barangay, contact_number)
+      `,
+      )
+      .in("status", ["warning", "critical"])
+      .order("recorded_at", { ascending: false });
+
+    if (barangay) {
+      query = query.eq("residents.barangay", barangay);
+    }
+
+    const { data, error } = await query.limit(50);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching pending interventions:", error);
+    return [];
+  }
+}
+
+// Get health trends over time (last 30 days)
+export async function getHealthTrendsOverTime(
+  barangay?: string,
+  daysBack = 30,
+) {
+  try {
+    const date = new Date();
+    date.setDate(date.getDate() - daysBack);
+
+    let query = supabase
+      .from("health_indicators")
+      .select(
+        `
+        id,
+        indicator_type,
+        status,
+        recorded_at,
+        residents(barangay)
+      `,
+      )
+      .gte("recorded_at", date.toISOString());
+
+    if (barangay) {
+      query = query.eq("residents.barangay", barangay);
+    }
+
+    const { data, error } = await query.order("recorded_at", {
+      ascending: true,
+    });
+
+    if (error) throw error;
+
+    // Group data by date for trend visualization
+    const trends: { [key: string]: any } = {};
+
+    data?.forEach((record: any) => {
+      const dateStr = new Date(record.recorded_at).toISOString().split("T")[0];
+      if (!trends[dateStr]) {
+        trends[dateStr] = {
+          date: dateStr,
+          total: 0,
+          normal: 0,
+          warning: 0,
+          critical: 0,
+        };
+      }
+      trends[dateStr].total++;
+      if (record.status === "normal") trends[dateStr].normal++;
+      else if (record.status === "warning") trends[dateStr].warning++;
+      else if (record.status === "critical") trends[dateStr].critical++;
+    });
+
+    return Object.values(trends).sort(
+      (a: any, b: any) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+  } catch (error) {
+    console.error("Error fetching health trends:", error);
+    return [];
+  }
+}
+
+// Get underserved areas analysis
+export async function getUnderservedAreas() {
+  try {
+    const { data: barangayData, error: barangayError } = await supabase
+      .from("health_programs")
+      .select("barangay");
+
+    if (barangayError) throw barangayError;
+
+    const { data: residentsData, error: residentsError } = await supabase
+      .from("residents")
+      .select("barangay, id");
+
+    if (residentsError) throw residentsError;
+
+    // Count residents per barangay
+    const residentsPerBarangay: { [key: string]: number } = {};
+    residentsData?.forEach((r: any) => {
+      residentsPerBarangay[r.barangay] =
+        (residentsPerBarangay[r.barangay] || 0) + 1;
+    });
+
+    // Count programs per barangay
+    const programsPerBarangay: { [key: string]: number } = {};
+    barangayData?.forEach((p: any) => {
+      programsPerBarangay[p.barangay] =
+        (programsPerBarangay[p.barangay] || 0) + 1;
+    });
+
+    // Identify underserved areas (high population, few programs)
+    const underserved = Object.entries(residentsPerBarangay)
+      .map(([barangay, populationCount]) => ({
+        barangay,
+        population: populationCount,
+        programs: programsPerBarangay[barangay] || 0,
+        ratio: populationCount / ((programsPerBarangay[barangay] || 1) * 10),
+      }))
+      .filter((item) => item.ratio > 1) // Ratio > 1 indicates underserved
+      .sort((a, b) => b.ratio - a.ratio);
+
+    return underserved;
+  } catch (error) {
+    console.error("Error fetching underserved areas:", error);
+    return [];
+  }
+}
+
+// Get all barangays with their health status
+export async function getBarangayHealthStatus() {
+  try {
+    const { data: residentsData, error: residentsError } = await supabase
+      .from("residents")
+      .select("barangay");
+
+    if (residentsError) throw residentsError;
+
+    // Get unique barangays
+    const barangays = Array.from(
+      new Set(residentsData?.map((r: any) => r.barangay) || []),
+    );
+
+    // Get health metrics for each barangay
+    const barangayStatus = await Promise.all(
+      barangays.map(async (barangay) => {
+        const vaccinationStats = await getVaccinationCoverageByBarangay(
+          new Date().getFullYear(),
+        );
+        const vaccinationData = vaccinationStats.find(
+          (v: any) => v.barangay === barangay,
+        );
+
+        const interventions = await getPendingHealthInterventions(barangay);
+
+        return {
+          barangay,
+          vaccination_coverage: vaccinationData?.coverage_percentage || 0,
+          pending_interventions: interventions.length,
+          health_status:
+            interventions.length > 5
+              ? "critical"
+              : interventions.length > 2
+                ? "warning"
+                : "normal",
+        };
+      }),
+    );
+
+    return barangayStatus;
+  } catch (error) {
+    console.error("Error fetching barangay health status:", error);
+    return [];
+  }
+}

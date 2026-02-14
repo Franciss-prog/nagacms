@@ -2,8 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 
 /**
- * Middleware to protect dashboard routes
- * Redirects unauthenticated users to /auth/login
+ * Middleware to protect dashboard routes and enforce role-based access
+ * - Redirects unauthenticated users to /auth/login
+ * - Routes users to appropriate dashboard based on role
+ * - Enforces health worker access control
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -31,6 +33,26 @@ export async function middleware(request: NextRequest) {
       // Clear expired session
       response.cookies.delete("session");
       return response;
+    }
+
+    // Role-based route protection
+    const healthWorkerRoute = pathname.startsWith("/dashboard/health-workers");
+    const staffRoute = pathname.startsWith("/dashboard/staff");
+
+    if (healthWorkerRoute && session.user.role !== "workers") {
+      // Non-health workers trying to access health worker routes
+      const approporiateRoute =
+        session.user.role === "staff" ? "/dashboard/staff" : "/dashboard";
+      return NextResponse.redirect(new URL(approporiateRoute, request.url));
+    }
+
+    if (staffRoute && session.user.role !== "staff") {
+      // Non-staff trying to access staff routes
+      const appropriateRoute =
+        session.user.role === "workers"
+          ? "/dashboard/health-workers"
+          : "/dashboard";
+      return NextResponse.redirect(new URL(appropriateRoute, request.url));
     }
   }
 

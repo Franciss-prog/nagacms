@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
+import Link from "next/link";
 
 /**
  * Login page for internal staff
@@ -30,6 +31,18 @@ export default async function LoginPage() {
         <div className="mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-200">
           <p className="font-medium">Demo Credentials (Testing)</p>
           <p className="mt-1 text-xs">Contact your administrator for access</p>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Are you a community health worker?{" "}
+            <Link
+              href="/auth/workers"
+              className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+            >
+              Login as Worker
+            </Link>
+          </p>
         </div>
       </div>
     </div>

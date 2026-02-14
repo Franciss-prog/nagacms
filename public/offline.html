@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - Health Workers App</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+          "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        padding: 40px 30px;
+        text-align: center;
+      }
+
+      .offline-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+        background: #f3f4f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+      }
+
+      h1 {
+        font-size: 24px;
+        color: #1f2937;
+        margin-bottom: 10px;
+      }
+
+      p {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      .info {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+        text-align: left;
+      }
+
+      .info-title {
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 5px;
+      }
+
+      .info-text {
+        color: #b45309;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .cached-pages {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .cached-pages h3 {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .offline-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .offline-link {
+        display: inline-block;
+        padding: 10px 16px;
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .offline-link:hover {
+        background: #d1d5db;
+      }
+
+      .status-indicator {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f0fdf4;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #dc2626;
+        animation: blink 2s infinite;
+      }
+
+      .status-dot.online {
+        background: #16a34a;
+        animation: none;
+      }
+
+      .status-text {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .retry-button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .retry-button:hover {
+        background: #5568d3;
+      }
+
+      .retry-button:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="offline-icon">📡</div>
+
+      <h1>You're Offline</h1>
+      <p>No internet connection detected</p>
+
+      <div class="info">
+        <div class="info-title">📱 Good news!</div>
+        <div class="info-text">
+          You can still use the Health Workers app offline. Your data entries
+          will be saved locally and synced when you're back online.
+        </div>
+      </div>
+
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <div class="status-text">Waiting for connection...</div>
+      </div>
+
+      <button class="retry-button" onclick="retryConnection()">
+        Try Again
+      </button>
+
+      <div class="cached-pages">
+        <h3>💾 Available Offline</h3>
+        <div class="offline-actions">
+          <p style="font-size: 14px; color: #9ca3af; margin-bottom: 10px">
+            Open a cached page to continue working
+          </p>
+          <a href="/" class="offline-link">← Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Check connection status
+      function updateConnectionStatus() {
+        const indicator = document.querySelector(".status-dot");
+        const statusText = document.querySelector(".status-text");
+
+        if (navigator.onLine) {
+          indicator.classList.add("online");
+          statusText.textContent = "Connected! Redirecting...";
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1500);
+        }
+      }
+
+      // Retry connection
+      function retryConnection() {
+        fetch("/", { method: "HEAD", cache: "no-store" })
+          .then(() => {
+            updateConnectionStatus();
+          })
+          .catch(() => {
+            alert("Still offline. Check your connection and try again.");
+          });
+      }
+
+      // Listen for connection changes
+      window.addEventListener("online", () => {
+        console.log("Connection restored");
+        updateConnectionStatus();
+      });
+
+      // Check connection immediately
+      if (navigator.onLine) {
+        window.location.href = "/";
+      }
+
+      // Auto-retry every 5 seconds
+      setInterval(() => {
+        if (navigator.onLine) {
+          window.location.href = "/";
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+{
+  "name": "Health Workers Dashboard",
+  "short_name": "Health Workers",
+  "description": "Mobile-first health worker data entry and management system with offline capability",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "screenshots": [
+    {
+      "src": "/logo-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-192x192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-512x512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Vaccination",
+      "short_name": "Vaccination",
+      "description": "Record a new vaccination",
+      "url": "/dashboard/health-workers/vaccinations/new",
+      "icons": [
+        {
+          "src": "/logo-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "New Maternal Health Visit",
+      "short_name": "Maternal Health",
+      "description": "Record a maternal health visit",
+      "url": "/dashboard/health-workers/maternal-health/new",
+      "icons": [
+        {
+          "src": "/logo-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "New Senior Check-up",
+      "short_name": "Senior Care",
+      "description": "Record a senior citizen check-up",
+      "url": "/dashboard/health-workers/senior-care/new",
+      "icons": [
+        {
+          "src": "/logo-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "categories": ["health", "medical"],
+  "prefer_related_applications": false
+}

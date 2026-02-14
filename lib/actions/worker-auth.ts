@@ -3,15 +3,15 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient, setSession } from "@/lib/auth";
 import { loginSchema } from "@/lib/schemas/auth";
-import type { User, Session } from "@/lib/types";
+import type { Session } from "@/lib/types";
 import bcrypt from "bcryptjs";
 
 /**
- * Server Action: Login with username and password
- * Verifies credentials against public.users table
+ * Server Action: Worker Login with username and password
+ * Verifies credentials against public.users table with role='worker'
  * Sets secure session cookie on success
  */
-export async function loginAction(formData: {
+export async function workerLoginAction(formData: {
   username: string;
   password: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -26,23 +26,24 @@ export async function loginAction(formData: {
   try {
     const supabase = await createServerSupabaseClient();
 
-    // Fetch user from public.users table
+    // Fetch user from public.users table where user_role is 'workers'
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
       .eq("username", username)
+      .eq("user_role", "workers")
       .single();
 
     if (error || !user) {
       // Don't reveal if user exists or not (security best practice)
-      return { success: false, error: "Invalid username or password" };
+      return { success: false, error: "Invalid worker credentials" };
     }
 
     // Verify password using bcrypt
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
-      return { success: false, error: "Invalid username or password" };
+      return { success: false, error: "Invalid worker credentials" };
     }
 
     // Create session with 7-day expiry
@@ -63,20 +64,20 @@ export async function loginAction(formData: {
     // Set session in httpOnly cookie
     await setSession(session);
 
-    // Redirect to dashboard
-    redirect("/dashboard");
+    // Redirect to workers dashboard
+    redirect("/dashboard-workers");
   } catch (error) {
-    console.error("[loginAction]", error);
+    console.error("[workerLoginAction]", error);
     return { success: false, error: "An error occurred. Please try again." };
   }
 }
 
 /**
- * Server Action: Logout
- * Clears session cookie and redirects to login
+ * Server Action: Worker Logout
+ * Clears session cookie and redirects to worker login
  */
-export async function logoutAction(): Promise<void> {
+export async function workerLogoutAction(): Promise<void> {
   const { clearSession } = await import("@/lib/auth");
   await clearSession();
-  redirect("/auth/login");
+  redirect("/auth/workers");
 }

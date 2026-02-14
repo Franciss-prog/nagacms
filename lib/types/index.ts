@@ -2,7 +2,13 @@
  * Core TypeScript types for the Barangay Health Dashboard
  */
 
-export type UserRole = "user" | "admin" | "barangay_admin";
+export type UserRole =
+  | "staff"
+  | "residence"
+  | "workers"
+  | "user"
+  | "admin"
+  | "barangay_admin";
 
 export interface User {
   id: string;
@@ -166,4 +172,127 @@ export interface DashboardStats {
   returned_submissions: number;
   total_residents: number;
   total_applications: number;
+}
+
+// ============================================================================
+// HEALTH WORKERS TYPES
+// ============================================================================
+
+export type VaccineStatus = "completed" | "pending" | "overdue";
+export type VaccineType =
+  | "covid19"
+  | "measles"
+  | "polio"
+  | "dpt"
+  | "bcg"
+  | "hpv"
+  | "other";
+
+export interface VaccinationRecord {
+  id: string;
+  resident_id: string;
+  vaccine_name: string;
+  dose_number: number;
+  vaccine_date: string; // ISO date
+  next_dose_date?: string;
+  vaccination_site?: string;
+  administered_by: string;
+  batch_number?: string;
+  status: VaccineStatus;
+  notes?: string;
+  photo_url?: string;
+  synced: boolean; // For offline queue
+  created_at: string;
+  updated_at: string;
+  // Populated in queries
+  resident?: Resident;
+  administrator?: User;
+}
+
+export interface MaternalHealthRecord {
+  id: string;
+  resident_id: string;
+  visit_date: string;
+  trimester?: 1 | 2 | 3 | "postpartum";
+  blood_pressure_systolic?: number;
+  blood_pressure_diastolic?: number;
+  weight?: number;
+  height?: number;
+  hemoglobin?: number;
+  blood_type?: string;
+  rh_factor?: "positive" | "negative";
+  prenatal_vitamins?: boolean;
+  tetanus_toxoid?: boolean;
+  iron_supplement?: boolean;
+  health_complications?: string;
+  notes?: string;
+  recorded_by: string;
+  next_visit_date?: string;
+  photo_url?: string;
+  synced: boolean;
+  created_at: string;
+  updated_at: string;
+  // Populated in queries
+  resident?: Resident;
+  recorder?: User;
+}
+
+export interface SeniorAssistanceRecord {
+  id: string;
+  resident_id: string;
+  visit_date: string;
+  blood_pressure_systolic?: number;
+  blood_pressure_diastolic?: number;
+  heart_rate?: number;
+  blood_glucose?: number;
+  weight?: number;
+  health_concerns?: string;
+  medications?: string;
+  mobility_status?: "independent" | "assisted" | "dependent";
+  cognitive_status?:
+    | "sharp"
+    | "mild_impairment"
+    | "moderate_impairment"
+    | "severe_impairment";
+  assistance_type?:
+    | "financial"
+    | "medical"
+    | "home_care"
+    | "counseling"
+    | "other";
+  referral_needed?: boolean;
+  referral_to?: string;
+  notes?: string;
+  recorded_by: string;
+  next_visit_date?: string;
+  photo_url?: string;
+  synced: boolean;
+  created_at: string;
+  updated_at: string;
+  // Populated in queries
+  resident?: Resident;
+  recorder?: User;
+}
+
+export interface OfflineQueueItem {
+  id: string; // Local UUID
+  type: "vaccination" | "maternal_health" | "senior_assistance";
+  data: VaccinationRecord | MaternalHealthRecord | SeniorAssistanceRecord;
+  timestamp: number; // Milliseconds
+  retryCount: number;
+  lastError?: string;
+}
+
+export interface HealthWorker {
+  id: string;
+  user_id: string;
+  assigned_barangay: string;
+  license_number?: string;
+  specialization?: string;
+  phone_number: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Populated in queries
+  user?: User;
 }
