@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getSession } from "@/lib/auth";
-import { HealthWorkersDashboard } from "@/components/health-workers/health-workers-dashboard";
+import { DataEntryPage } from "@/components/health-workers/data-entry-page";
+import { useEffect, useState } from "react";
 
-export default function WorkerDashboardPage() {
+export default function HealthDataEntryPage() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,9 +23,7 @@ export default function WorkerDashboardPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-          <p className="mt-4 text-sm text-muted-foreground">
-            Loading dashboard...
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -34,18 +32,10 @@ export default function WorkerDashboardPage() {
   if (!session || session.user.role !== "workers") {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-center text-red-600">
-          Unauthorized access. Only health workers can view this page.
-        </p>
+        <p className="text-center text-red-600">Unauthorized access.</p>
       </div>
     );
   }
 
-  return (
-    <HealthWorkersDashboard
-      barangay={session.user.assigned_barangay}
-      userId={session.user.id}
-      userName={session.user.username}
-    />
-  );
+  return <DataEntryPage barangay={session.user.assigned_barangay} />;
 }
