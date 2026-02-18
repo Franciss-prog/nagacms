@@ -118,7 +118,7 @@ export default function HealthWorkersDashboard() {
       setSeniorCitizenStats(seniorData);
       setPendingInterventions(interventions || []);
       setHealthTrends(trends || []);
-      setBarangayHealthStatus(barangayStatus || []);
+      setBarangayHealthStatus((barangayStatus || []) as BarangayHealthData[]);
       setIndicatorsByType(typeIndicators || []);
       setIndicatorsByStatus(statusIndicators || []);
       setUnderservedAreas(underserved || []);

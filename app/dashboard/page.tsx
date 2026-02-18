@@ -24,6 +24,30 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+const BarangayGisMapIntegrated = dynamic(
+  () =>
+    import("@/components/dashboard/barangay-gis-map-integrated").then(
+      (mod) => mod.BarangayGisMapIntegrated,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Barangay Vaccination Coverage Map</CardTitle>
+          <CardDescription>Loading map...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="text-center text-gray-500">Loading map...</div>
+          </div>
+        </CardContent>
+      </Card>
+    ),
+  },
+);
 
 // Mock data for now - will be replaced with real API calls
 const mockStats = {
@@ -155,6 +179,19 @@ export default function DashboardPage() {
           color="bg-indigo-50 dark:bg-indigo-950"
         />
       </div>
+
+      {/* Barangay Vaccination Coverage GIS Map */}
+      <section>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+          Vaccination Coverage by Barangay
+        </h2>
+        <BarangayGisMapIntegrated
+          useMockData={true}
+          mapHeight="h-[600px]"
+          showLegend={true}
+          showMapLegend={true}
+        />
+      </section>
 
       {/* Recent Activity */}
       <Card>
