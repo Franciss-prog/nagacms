@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Calendar,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,11 @@ const menuItems = [
   { href: "/dashboard/yakap", icon: FileCheck, label: "YAKAP Applications" },
   { href: "/dashboard/submissions", icon: Heart, label: "Submissions" },
   { href: "/dashboard/appointments", icon: Calendar, label: "Appointments" },
+  {
+    href: "/dashboard/announcements",
+    icon: Megaphone,
+    label: "Announcements",
+  },
   { href: "/dashboard/facilities", icon: MapPin, label: "Facilities" },
   {
     href: "/dashboard/health-indicators",
