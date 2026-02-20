@@ -64,7 +64,7 @@ export function WorkerLoginForm() {
       <CardHeader className="space-y-1">
         <div className="flex items-center gap-2">
           <Users className="h-6 w-6 text-emerald-600" />
-          <CardTitle className="text-2xl">Worker Login</CardTitle>
+          <CardTitle className="text-2xl">City Health Login</CardTitle>
         </div>
         <CardDescription>
           Enter your worker credentials to continue
@@ -85,7 +85,7 @@ export function WorkerLoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Worker Username</FormLabel>
+                  <FormLabel>City Health Staff Username</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -133,7 +133,7 @@ export function WorkerLoginForm() {
                   Signing in...
                 </>
               ) : (
-                "Sign In as Worker"
+                "Sign In as City Health Staff"
               )}
             </Button>
           </form>

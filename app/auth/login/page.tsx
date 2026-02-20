@@ -35,7 +35,7 @@ export default async function LoginPage() {
 
         <div className="mt-4 text-center">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Are you a community health worker?{" "}
+            Are you a community City Health Worker?{" "}
             <Link
               href="/auth/workers"
               className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
