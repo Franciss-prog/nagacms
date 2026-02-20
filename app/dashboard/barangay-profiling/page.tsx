@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,33 +17,68 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BarangayProfileForm } from "@/components/barangay-profiling/barangay-profile-form";
 import { BarangayProfilesList } from "@/components/barangay-profiling/barangay-profiles-list";
 import { ViewProfileDialog } from "@/components/barangay-profiling/view-profile-dialog";
 import type { BarangayProfileFormData } from "@/components/barangay-profiling/barangay-profile-form";
 import type { BarangayProfile } from "@/components/barangay-profiling/barangay-profiles-list";
-import { BookUser } from "lucide-react";
+import { getBarangayProfiles } from "@/lib/queries/barangay-profiles";
+import {
+  createBarangayProfileAction,
+  updateBarangayProfileAction,
+  deleteBarangayProfileAction,
+} from "@/lib/actions/barangay-profiles";
+import { BookUser, AlertCircle } from "lucide-react";
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function BarangayProfilingPage() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [profiles, setProfiles] = useState<BarangayProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<BarangayProfile | null>(null);
   const [viewingProfile, setViewingProfile] = useState<BarangayProfile | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // ── Load profiles ──────────────────────────────────────────────────────────
+
+  const loadProfiles = useCallback(async () => {
+    setIsLoading(true);
+    setPageError(null);
+    try {
+      const result = await getBarangayProfiles({ limit: 200 });
+      if (result.error) {
+        setPageError("Failed to load profiles. Please try again.");
+      } else {
+        setProfiles(result.data);
+      }
+    } catch {
+      setPageError("Failed to load profiles. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfiles();
+  }, [loadProfiles]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleAdd = () => {
     setEditingProfile(null);
+    setFormError(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (profile: BarangayProfile) => {
     setEditingProfile(profile);
+    setFormError(null);
     setIsFormOpen(true);
   };
 
@@ -55,40 +90,48 @@ export default function BarangayProfilingPage() {
     setDeletingId(id);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingId) return;
-    setProfiles((prev) => prev.filter((p) => p.id !== deletingId));
+    const result = await deleteBarangayProfileAction(deletingId);
+    if (result.success) {
+      setProfiles((prev) => prev.filter((p) => p.id !== deletingId));
+    } else {
+      setPageError(result.error ?? "Failed to delete profile.");
+    }
     setDeletingId(null);
   };
 
   const handleFormSubmit = async (data: BarangayProfileFormData) => {
     setIsSubmitting(true);
-    // Simulate async save (replace with real API call later)
-    await new Promise((r) => setTimeout(r, 600));
-
-    if (editingProfile) {
-      setProfiles((prev) =>
-        prev.map((p) =>
-          p.id === editingProfile.id ? { ...editingProfile, ...data } : p
-        )
-      );
-    } else {
-      const newProfile: BarangayProfile = {
-        ...data,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      };
-      setProfiles((prev) => [newProfile, ...prev]);
+    setFormError(null);
+    try {
+      if (editingProfile) {
+        const result = await updateBarangayProfileAction(editingProfile.id, data);
+        if (!result.success) {
+          setFormError(result.error ?? "Failed to update profile.");
+          return;
+        }
+      } else {
+        const result = await createBarangayProfileAction(data);
+        if (!result.success) {
+          setFormError(result.error ?? "Failed to save profile.");
+          return;
+        }
+      }
+      await loadProfiles();
+      setIsFormOpen(false);
+      setEditingProfile(null);
+    } catch {
+      setFormError("An unexpected error occurred.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    setIsFormOpen(false);
-    setEditingProfile(null);
   };
 
   const handleFormCancel = () => {
     setIsFormOpen(false);
     setEditingProfile(null);
+    setFormError(null);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -110,9 +153,18 @@ export default function BarangayProfilingPage() {
         </div>
       </div>
 
+      {/* Page-level error */}
+      {pageError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{pageError}</AlertDescription>
+        </Alert>
+      )}
+
       {/* Profiles List */}
       <BarangayProfilesList
         profiles={profiles}
+        isLoading={isLoading}
         onAdd={handleAdd}
         onEdit={handleEdit}
         onView={handleView}
@@ -132,6 +184,14 @@ export default function BarangayProfilingPage() {
               {editingProfile ? "Edit Barangay Profile" : "New Barangay Profile"}
             </DialogTitle>
           </DialogHeader>
+
+          {formError && (
+            <Alert variant="destructive" className="mb-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          )}
+
           <BarangayProfileForm
             key={editingProfile?.id ?? "new"}
             initialData={editingProfile ?? undefined}

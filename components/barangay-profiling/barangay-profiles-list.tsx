@@ -25,6 +25,7 @@ import {
   Trash2,
   Eye,
   UserPlus,
+  Loader2,
 } from "lucide-react";
 import type { BarangayProfileFormData } from "./barangay-profile-form";
 
@@ -35,6 +36,7 @@ export interface BarangayProfile extends BarangayProfileFormData {
 
 interface BarangayProfilesListProps {
   profiles: BarangayProfile[];
+  isLoading?: boolean;
   onAdd: () => void;
   onEdit: (profile: BarangayProfile) => void;
   onView: (profile: BarangayProfile) => void;
@@ -51,6 +53,7 @@ const CIVIL_STATUS_LABELS: Record<string, string> = {
 
 export function BarangayProfilesList({
   profiles,
+  isLoading = false,
   onAdd,
   onEdit,
   onView,
@@ -103,7 +106,16 @@ export function BarangayProfilesList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12">
+                  <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading profiles…</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={7}
