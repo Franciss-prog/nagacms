@@ -49,7 +49,7 @@ const menuItems = [
   { href: "/dashboard/staff", icon: Users, label: "Staff Management" },
   {
     href: "/dashboard/barangay-profiling",
-    icon: BookUser,
+    icon: Megaphone,
     label: "Barangay Profiling",
   },
 ];
