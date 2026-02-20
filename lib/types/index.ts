@@ -157,12 +157,29 @@ export interface ActivityLog {
     | "yakap_application"
     | "resident"
     | "facility"
-    | "user";
+    | "user"
+    | "announcement";
   resource_id?: string;
   changes?: Record<string, any>;
   created_at: string;
   // Populated in queries
   user?: User;
+}
+
+export type AnnouncementStatus = "draft" | "published";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  status: AnnouncementStatus;
+  created_by?: string | null;
+  published_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  target_barangays: string[];
+  is_read?: boolean;
+  read_at?: string | null;
 }
 
 export interface DashboardStats {

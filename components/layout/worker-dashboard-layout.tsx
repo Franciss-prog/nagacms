@@ -19,6 +19,7 @@ import {
   ClipboardList,
   MapPin,
   FileText,
+  Bell,
   Menu,
   X,
   LogOut,
@@ -58,6 +59,11 @@ const navigation = [
     name: "Reports",
     href: "/dashboard-workers/reports",
     icon: FileText,
+  },
+  {
+    name: "Announcements",
+    href: "/dashboard-workers/announcements",
+    icon: Bell,
   },
 ];
 
