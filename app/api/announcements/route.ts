@@ -7,7 +7,7 @@ import {
 } from "@/lib/queries/announcements";
 
 function canManageAnnouncements(role: string) {
-  return role === "admin" || role === "barangay_admin" || role === "staff";
+  return role === "admin" || role === "workers";
 }
 
 export async function GET(request: NextRequest) {
