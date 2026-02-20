@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Calendar,
+  BookUser,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,11 @@ const menuItems = [
     label: "Health Indicators",
   },
   { href: "/dashboard/staff", icon: Users, label: "Staff Management" },
+  {
+    href: "/dashboard/barangay-profiling",
+    icon: BookUser,
+    label: "Barangay Profiling",
+  },
 ];
 
 export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
