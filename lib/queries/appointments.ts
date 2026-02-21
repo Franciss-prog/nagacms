@@ -16,6 +16,7 @@ export async function getAppointments(options?: {
   status?: string;
   resident_id?: string;
   limit?: number;
+  date?: string; // Filter by specific date (YYYY-MM-DD format)
 }) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -62,6 +63,10 @@ export async function getAppointments(options?: {
 
     if (options?.resident_id) {
       query = query.eq("resident_id", options.resident_id);
+    }
+
+    if (options?.date) {
+      query = query.eq("appointment_date", options.date);
     }
 
     if (options?.limit) {

@@ -12,7 +12,10 @@ export async function updateAppointmentStatus(
 ) {
   const session = await getSession();
 
-  if (!session || !["admin", "barangay_admin"].includes(session.user.role)) {
+  if (
+    !session ||
+    !["admin", "barangay_admin", "staff"].includes(session.user.role)
+  ) {
     return { success: false, error: "Unauthorized" };
   }
 
