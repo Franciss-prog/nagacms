@@ -1,12 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/auth";
-import type { Database } from "@/lib/types/database";
 
-type VaccinationRecord =
-  Database["public"]["Tables"]["vaccination_records"]["Row"];
-type MaternalHealthRecord =
-  Database["public"]["Tables"]["maternal_health_records"]["Row"];
-type SeniorAssistanceRecord =
-  Database["public"]["Tables"]["senior_assistance_records"]["Row"];
+type VaccinationRecord = any;
+type MaternalHealthRecord = any;
+type SeniorAssistanceRecord = any;
 
 /**
  * Vaccination Records Service
@@ -163,7 +159,7 @@ export async function getVaccinationCoverage(barangay: string) {
   // Get vaccinated residents (with at least one vaccination)
   const { data: vaccinated } = await supabase
     .from("vaccination_records")
-    .select("resident_id", { count: "exact", head: 0 })
+    .select("resident_id", { count: "exact", head: false })
     .in(
       "resident_id",
       residents.map((r) => r.id),
@@ -188,7 +184,7 @@ export async function getMaternalHealthCoverage(barangay: string) {
 
   const { data: mothers } = await supabase
     .from("maternal_health_records")
-    .select("resident_id", { count: "exact", head: 0 })
+    .select("resident_id", { count: "exact", head: false })
     .in(
       "resident_id",
       residents.map((r) => r.id),

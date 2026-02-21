@@ -353,24 +353,26 @@ export function useOfflineQueueSync(userId: string) {
 
       if (err) throw err;
 
-      for (const item of queue || []) {
+      for (const item of (queue || []) as {
+        id: string;
+        table_name: string;
+        data: any;
+      }[]) {
         try {
           // Insert the data to the actual table
-          const { error: insertErr } = await supabase
-            .from(item.table_name)
-            .insert([item.data]);
+          const { error: insertErr } = await (
+            supabase.from(item.table_name as any) as any
+          ).insert([item.data]);
 
           if (insertErr) throw insertErr;
 
           // Mark as synced
-          await supabase
-            .from("offline_queue")
+          await (supabase.from("offline_queue") as any)
             .update({ status: "synced", synced_at: new Date().toISOString() })
             .eq("id", item.id);
         } catch (itemErr) {
           // Mark as failed
-          await supabase
-            .from("offline_queue")
+          await (supabase.from("offline_queue") as any)
             .update({
               status: "failed",
               error_message: String(itemErr),

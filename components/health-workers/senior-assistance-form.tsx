@@ -52,7 +52,7 @@ export function SeniorAssistanceForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const form = useForm<SeniorAssistanceRecordInput>({
-    resolver: zodResolver(seniorAssistanceRecordSchema),
+    resolver: zodResolver(seniorAssistanceRecordSchema) as any,
     defaultValues: {
       resident_id: residentId,
       assistance_type: "medical_support",

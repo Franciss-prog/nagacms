@@ -3,6 +3,8 @@
  * Handles service worker registration, install prompts, and offline detection
  */
 
+import React from "react";
+
 let deferredPrompt: any = null;
 let serviceWorkerReady = false;
 

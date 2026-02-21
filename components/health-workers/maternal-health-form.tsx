@@ -52,7 +52,8 @@ export function MaternalHealthForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const form = useForm<MaternalHealthRecordInput>({
-    resolver: zodResolver(maternalHealthRecordSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(maternalHealthRecordSchema) as any,
     defaultValues: {
       resident_id: residentId,
       record_type: "antenatal",

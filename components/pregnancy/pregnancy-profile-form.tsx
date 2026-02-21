@@ -130,16 +130,19 @@ function buildDefaultValues(
       },
       heart: record.general_survey?.heart ?? { findings: [], others: "" },
       abdomen: record.general_survey?.abdomen ?? { findings: [], others: "" },
-      extremities: record.general_survey?.extremities ?? {
-        findings: [],
-        others: "",
-      },
-      skin: record.general_survey?.skin ?? { findings: [], others: "" },
-      musculoskeletal: record.general_survey?.musculoskeletal ?? {
+      skin_extremities: record.general_survey?.skin_extremities ?? {
         findings: [],
         others: "",
       },
       genitourinary: record.general_survey?.genitourinary ?? {
+        findings: [],
+        others: "",
+      },
+      digital_rectal_exam: record.general_survey?.digital_rectal_exam ?? {
+        findings: [],
+        others: "",
+      },
+      neurological_exam: record.general_survey?.neurological_exam ?? {
         findings: [],
         others: "",
       },
