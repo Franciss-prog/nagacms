@@ -53,7 +53,7 @@ export function VaccinationForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const form = useForm<VaccinationRecordInput>({
-    resolver: zodResolver(vaccinationRecordSchema),
+    resolver: zodResolver(vaccinationRecordSchema) as any,
     defaultValues: {
       resident_id: residentId,
       vaccine_name: "",

@@ -435,9 +435,9 @@ export async function syncOfflineRecords(
   }>,
 ) {
   try {
-    let vaccinations = [];
-    let maternalRecords = [];
-    let seniorRecords = [];
+    let vaccinations: any[] = [];
+    let maternalRecords: any[] = [];
+    let seniorRecords: any[] = [];
 
     // Separate records by type
     records.forEach((record) => {

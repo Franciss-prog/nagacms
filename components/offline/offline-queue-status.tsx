@@ -5,10 +5,10 @@ import {
   getQueue,
   getSyncStatus,
   removeFromQueue,
-  syncOfflineRecords,
+  type SyncStatus,
 } from "@/lib/utils/offline-queue";
 import { syncOfflineRecords as performSync } from "@/lib/queries/health-workers";
-import type { OfflineQueueItem, SyncStatus } from "@/lib/types";
+import type { OfflineQueueItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -159,7 +159,8 @@ export function OfflineQueueStatus() {
             </p>
             {syncStatus.errors.length > 0 && (
               <p className="mt-1 text-red-700">
-                <strong>Recent errors:</strong> {syncStatus.errors.slice(-1)[0]}
+                <strong>Recent errors:</strong>{" "}
+                {syncStatus.errors.slice(-1)[0]?.message}
               </p>
             )}
           </div>
@@ -326,7 +327,7 @@ export function SyncStatusReport() {
           </div>
           {syncStatus.errors.length > 0 && (
             <p className="text-xs text-red-600 mt-1 truncate">
-              {syncStatus.errors[0]}
+              {syncStatus.errors[0]?.message}
             </p>
           )}
         </CardContent>

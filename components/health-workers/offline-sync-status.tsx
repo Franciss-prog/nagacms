@@ -154,7 +154,7 @@ export function OfflineDataSaved({
   onDismiss,
 }: OfflineDataSavedProps) {
   useEffect(() => {
-    if (!show) return;
+    if (!show || !onDismiss) return;
 
     const timer = setTimeout(onDismiss, 4000);
     return () => clearTimeout(timer);

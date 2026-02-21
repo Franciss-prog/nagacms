@@ -319,3 +319,77 @@ export function downloadQueueBackup(): void {
 
 // Import React for the hook
 import React from "react";
+/**
+ * Get queue statistics for sync status display
+ */
+export async function getQueueStats(): Promise<{
+  total: number;
+  pending: number;
+  syncing: number;
+  synced: number;
+  failed: number;
+}> {
+  const queue = getQueue();
+  const status = getSyncStatus();
+  const failed = queue.filter(
+    (item) => item.retryCount > 0 && item.lastError,
+  ).length;
+  const pending = queue.length - failed;
+  return {
+    total: queue.length,
+    pending,
+    syncing: status.isSyncing ? 1 : 0,
+    synced: 0,
+    failed,
+  };
+}
+
+/**
+ * Sync all queued items with the server
+ */
+export async function syncQueue(
+  baseUrl: string,
+  authToken: string,
+): Promise<{ synced: number; failed: number }> {
+  const queue = getQueue();
+  let synced = 0;
+  let failed = 0;
+
+  setSyncing(true);
+
+  for (const item of queue) {
+    try {
+      let endpoint = "";
+      if (item.type === "vaccination") {
+        endpoint = `${baseUrl}/api/health-workers/vaccination-records`;
+      } else if (item.type === "maternal_health") {
+        endpoint = `${baseUrl}/api/health-workers/maternal-health-records`;
+      } else if (item.type === "senior_assistance") {
+        endpoint = `${baseUrl}/api/health-workers/senior-assistance-records`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(item.data),
+      });
+
+      if (response.ok) {
+        removeFromQueue(item.id);
+        synced++;
+      } else {
+        updateQueueItemError(item.id, `HTTP ${response.status}`);
+        failed++;
+      }
+    } catch (error) {
+      updateQueueItemError(item.id, String(error));
+      failed++;
+    }
+  }
+
+  setSyncing(false);
+  return { synced, failed };
+}

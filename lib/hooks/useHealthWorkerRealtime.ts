@@ -96,8 +96,10 @@ export function useHealthWorkerRealtime({
                 | "INSERT"
                 | "UPDATE"
                 | "DELETE";
+              const payloadNew = payload.new as { id?: string } | undefined;
+              const payloadOld = payload.old as { id?: string } | undefined;
               const newRecord: RealtimeRecord = {
-                id: payload.new?.id || payload.old?.id || "",
+                id: payloadNew?.id || payloadOld?.id || "",
                 type: mapTableToType(table),
                 data: eventType === "DELETE" ? payload.old : payload.new,
                 timestamp: new Date().toISOString(),
@@ -121,7 +123,7 @@ export function useHealthWorkerRealtime({
               }
             },
           )
-          .subscribe((status) => {
+          .subscribe((status: string) => {
             if (isMounted) {
               setIsConnected(status === "SUBSCRIBED");
               if (status === "CHANNEL_ERROR") {

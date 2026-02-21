@@ -27,7 +27,6 @@ import {
 
 interface TrendChartProps {
   data: Array<{
-    date: string;
     [key: string]: string | number;
   }>;
   title: string;
@@ -37,6 +36,7 @@ interface TrendChartProps {
     name: string;
     color: string;
   }>;
+  xAxisKey?: string;
 }
 
 export function TrendChart({
@@ -44,6 +44,7 @@ export function TrendChart({
   title,
   description,
   dataKeys,
+  xAxisKey = "name",
 }: TrendChartProps) {
   return (
     <Card>
@@ -58,7 +59,7 @@ export function TrendChart({
             margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis dataKey={xAxisKey} />
             <YAxis />
             <Tooltip />
             <Legend />
@@ -81,7 +82,6 @@ export function TrendChart({
 
 interface BarChartMetricsProps {
   data: Array<{
-    name: string;
     [key: string]: string | number;
   }>;
   title: string;
@@ -91,6 +91,7 @@ interface BarChartMetricsProps {
     name: string;
     color: string;
   }>;
+  xAxisKey?: string;
 }
 
 export function BarChartMetrics({
@@ -98,6 +99,7 @@ export function BarChartMetrics({
   title,
   description,
   dataKeys,
+  xAxisKey = "name",
 }: BarChartMetricsProps) {
   return (
     <Card>
@@ -112,7 +114,7 @@ export function BarChartMetrics({
             margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
+            <XAxis dataKey={xAxisKey} />
             <YAxis />
             <Tooltip />
             <Legend />

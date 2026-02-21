@@ -122,7 +122,13 @@ export function SeniorAssistanceForm({
         medications: formData.medications || undefined,
         mobility_status: formData.mobility_status as any,
         cognitive_status: formData.cognitive_status as any,
-        assistance_type: formData.assistance_type || undefined,
+        assistance_type: (formData.assistance_type || undefined) as
+          | "other"
+          | "financial"
+          | "medical"
+          | "home_care"
+          | "counseling"
+          | undefined,
         referral_needed: formData.referral_needed === "yes",
         referral_to: formData.referral_to || undefined,
         notes: formData.notes,

@@ -85,12 +85,14 @@ export function HealthWorkersDashboard({
 
       // Calculate coverage
       if (residentsData && residentsData.length > 0) {
-        const residentIds = residentsData.map((r) => r.id);
+        const residentIds = (residentsData as { id: string }[]).map(
+          (r) => r.id,
+        );
 
         // Vaccination coverage
         const { data: vaccinated } = await supabase
           .from("vaccination_records")
-          .select("resident_id", { count: "exact", head: 0 })
+          .select("resident_id", { count: "exact", head: false })
           .in("resident_id", residentIds);
 
         const vaccinationCoverage = vaccinated
@@ -98,12 +100,14 @@ export function HealthWorkersDashboard({
           : 0;
 
         // Maternal health coverage (females only)
-        const femaleResidents = residentsData.filter((r) => r.sex === "Female");
+        const femaleResidents = (
+          residentsData as { id: string; sex: string }[]
+        ).filter((r) => r.sex === "Female");
         const femaleIds = femaleResidents.map((r) => r.id);
 
         const { data: maternal } = await supabase
           .from("maternal_health_records")
-          .select("resident_id", { count: "exact", head: 0 })
+          .select("resident_id", { count: "exact", head: false })
           .in("resident_id", femaleIds);
 
         const maternalCoverage =
@@ -114,7 +118,9 @@ export function HealthWorkersDashboard({
             : 0;
 
         // Senior assistance coverage (60+)
-        const seniorResidents = residentsData.filter((r) => {
+        const seniorResidents = (
+          residentsData as { id: string; birth_date: string | null }[]
+        ).filter((r) => {
           if (!r.birth_date) return false;
           const age =
             new Date().getFullYear() - new Date(r.birth_date).getFullYear();
@@ -125,7 +131,7 @@ export function HealthWorkersDashboard({
 
         const { data: seniors } = await supabase
           .from("senior_assistance_records")
-          .select("resident_id", { count: "exact", head: 0 })
+          .select("resident_id", { count: "exact", head: false })
           .in("resident_id", seniorIds);
 
         const seniorCoverage =
@@ -167,11 +173,11 @@ export function HealthWorkersDashboard({
 
   // Mock trend data for demonstration
   const trendData = [
-    { date: "Jan 1", vaccinations: 12, maternal: 5, senior: 8 },
-    { date: "Jan 8", vaccinations: 15, maternal: 7, senior: 10 },
-    { date: "Jan 15", vaccinations: 18, maternal: 9, senior: 12 },
-    { date: "Jan 22", vaccinations: 22, maternal: 11, senior: 14 },
-    { date: "Jan 29", vaccinations: 25, maternal: 13, senior: 16 },
+    { name: "Jan 1", vaccinations: 12, maternal: 5, senior: 8 },
+    { name: "Jan 8", vaccinations: 15, maternal: 7, senior: 10 },
+    { name: "Jan 15", vaccinations: 18, maternal: 9, senior: 12 },
+    { name: "Jan 22", vaccinations: 22, maternal: 11, senior: 14 },
+    { name: "Jan 29", vaccinations: 25, maternal: 13, senior: 16 },
   ];
 
   const barangayComparison = [
