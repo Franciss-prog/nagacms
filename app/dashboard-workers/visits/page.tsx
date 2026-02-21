@@ -36,12 +36,14 @@ export default function FieldVisitsPage() {
 
         if (!supabase || !sess) return;
 
+        console.log("Fetching visits for user ID:", sess.user.id);
+
         // Get all health records as "visits"
         const [vaccinationData, maternalData, seniorData] = await Promise.all([
           supabase
             .from("vaccination_records")
             .select(
-              "id, resident_id, vaccine_date as visit_date, vaccine_name as activity_type, status",
+              "id, resident_id, visit_date:vaccine_date, activity_type:vaccine_name, status",
             )
             .eq("administered_by", sess.user.id)
             .order("vaccine_date", { ascending: false })
@@ -49,7 +51,7 @@ export default function FieldVisitsPage() {
           supabase
             .from("maternal_health_records")
             .select(
-              "id, resident_id, visit_date, record_type as activity_type, status",
+              "id, resident_id, visit_date, activity_type:record_type, status",
             )
             .eq("recorded_by", sess.user.id)
             .order("visit_date", { ascending: false })
@@ -57,12 +59,16 @@ export default function FieldVisitsPage() {
           supabase
             .from("senior_assistance_records")
             .select(
-              "id, resident_id, visit_date, assistance_type as activity_type, vital_status as status",
+              "id, resident_id, visit_date, activity_type:assistance_type, status:vital_status",
             )
             .eq("recorded_by", sess.user.id)
             .order("visit_date", { ascending: false })
             .limit(50),
         ]);
+
+        console.log("Vaccination data:", vaccinationData);
+        console.log("Maternal data:", maternalData);
+        console.log("Senior data:", seniorData);
 
         // Combine and sort by date
         const allVisits = [
