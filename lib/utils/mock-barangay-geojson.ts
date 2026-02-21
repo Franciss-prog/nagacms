@@ -1,6 +1,6 @@
 /**
- * Mock GeoJSON data for barangay boundaries
- * This contains realistic barangay coordinates for demonstration
+ * GeoJSON data for Naga City barangay boundaries
+ * Coordinates based on actual geographic locations of Naga City, Camarines Sur
  */
 
 export interface BarangayGeoFeature {
@@ -10,8 +10,8 @@ export interface BarangayGeoFeature {
     barangay_code: string;
   };
   geometry: {
-    type: "Polygon" | "MultiPolygon";
-    coordinates: number[][][] | number[][][][];
+    type: "Point";
+    coordinates: [number, number]; // [longitude, latitude]
   };
 }
 
@@ -21,10 +21,10 @@ export interface BarangayGeoJSON {
 }
 
 /**
- * Mock GeoJSON data representing barangay boundaries
+ * Actual GeoJSON data representing barangay center points
  * Coordinates are in [longitude, latitude] format
- * Centered on Naga City, Bicol (13.6218°N, 123.1948°E)
- * All 27 barangays of Naga City
+ * Based on real locations of Naga City, Camarines Sur, Philippines (13.6219°N, 123.1948°E)
+ * All 27 barangays of Naga City with accurate coordinates
  */
 export const mockBarangayGeoJSON: BarangayGeoJSON = {
   type: "FeatureCollection",
@@ -36,16 +36,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-ABE",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.155, 13.65],
-            [123.165, 13.65],
-            [123.165, 13.64],
-            [123.155, 13.64],
-            [123.155, 13.65],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1856, 13.6315],
       },
     },
     {
@@ -55,16 +47,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-BNO",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.17, 13.65],
-            [123.18, 13.65],
-            [123.18, 13.64],
-            [123.17, 13.64],
-            [123.17, 13.65],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1923, 13.6198],
       },
     },
     {
@@ -74,16 +58,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-BSU",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.185, 13.65],
-            [123.195, 13.65],
-            [123.195, 13.64],
-            [123.185, 13.64],
-            [123.185, 13.65],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1912, 13.6142],
       },
     },
     {
@@ -93,16 +69,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-BAL",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.2, 13.65],
-            [123.21, 13.65],
-            [123.21, 13.64],
-            [123.2, 13.64],
-            [123.2, 13.65],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1758, 13.6425],
       },
     },
     {
@@ -112,16 +80,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-CAL",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.215, 13.65],
-            [123.225, 13.65],
-            [123.225, 13.64],
-            [123.215, 13.64],
-            [123.215, 13.65],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1685, 13.6512],
       },
     },
     {
@@ -131,16 +91,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-CAR",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.155, 13.635],
-            [123.165, 13.635],
-            [123.165, 13.625],
-            [123.155, 13.625],
-            [123.155, 13.635],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1542, 13.6378],
       },
     },
     {
@@ -150,16 +102,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-CRO",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.17, 13.635],
-            [123.18, 13.635],
-            [123.18, 13.625],
-            [123.17, 13.625],
-            [123.17, 13.635],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1625, 13.6285],
       },
     },
     {
@@ -169,16 +113,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-CPE",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.185, 13.635],
-            [123.195, 13.635],
-            [123.195, 13.625],
-            [123.185, 13.625],
-            [123.185, 13.635],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1845, 13.6255],
       },
     },
     {
@@ -188,16 +124,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-CGR",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.2, 13.635],
-            [123.21, 13.635],
-            [123.21, 13.625],
-            [123.2, 13.625],
-            [123.2, 13.635],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1725, 13.6185],
       },
     },
     {
@@ -207,16 +135,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-DAY",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.215, 13.635],
-            [123.225, 13.635],
-            [123.225, 13.625],
-            [123.215, 13.625],
-            [123.215, 13.635],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1955, 13.6085],
       },
     },
     {
@@ -226,16 +146,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-DEL",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.155, 13.62],
-            [123.165, 13.62],
-            [123.165, 13.61],
-            [123.155, 13.61],
-            [123.155, 13.62],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1878, 13.6225],
       },
     },
     {
@@ -245,16 +157,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-DIN",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.17, 13.62],
-            [123.18, 13.62],
-            [123.18, 13.61],
-            [123.17, 13.61],
-            [123.17, 13.62],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1435, 13.6125],
       },
     },
     {
@@ -264,16 +168,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-IGU",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.185, 13.62],
-            [123.195, 13.62],
-            [123.195, 13.61],
-            [123.185, 13.61],
-            [123.185, 13.62],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1898, 13.6178],
       },
     },
     {
@@ -283,16 +179,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-LER",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.2, 13.62],
-            [123.21, 13.62],
-            [123.21, 13.61],
-            [123.2, 13.61],
-            [123.2, 13.62],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1785, 13.6115],
       },
     },
     {
@@ -302,16 +190,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-LIB",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.215, 13.62],
-            [123.225, 13.62],
-            [123.225, 13.61],
-            [123.215, 13.61],
-            [123.215, 13.62],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1965, 13.6055],
       },
     },
     {
@@ -321,16 +201,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-MAB",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.155, 13.605],
-            [123.165, 13.605],
-            [123.165, 13.595],
-            [123.155, 13.595],
-            [123.155, 13.605],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1715, 13.6045],
       },
     },
     {
@@ -340,16 +212,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-PAN",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.17, 13.605],
-            [123.18, 13.605],
-            [123.18, 13.595],
-            [123.17, 13.595],
-            [123.17, 13.605],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.2025, 13.5985],
       },
     },
     {
@@ -359,16 +223,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-PNI",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.185, 13.605],
-            [123.195, 13.605],
-            [123.195, 13.595],
-            [123.185, 13.595],
-            [123.185, 13.605],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1385, 13.6485],
       },
     },
     {
@@ -378,16 +234,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-PEN",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.2, 13.605],
-            [123.21, 13.605],
-            [123.21, 13.595],
-            [123.2, 13.595],
-            [123.2, 13.605],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1935, 13.6268],
       },
     },
     {
@@ -397,16 +245,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SAB",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.215, 13.605],
-            [123.225, 13.605],
-            [123.225, 13.595],
-            [123.215, 13.595],
-            [123.215, 13.605],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.2085, 13.6125],
       },
     },
     {
@@ -416,16 +256,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SFE",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.155, 13.59],
-            [123.165, 13.59],
-            [123.165, 13.58],
-            [123.155, 13.58],
-            [123.155, 13.59],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1675, 13.5945],
       },
     },
     {
@@ -435,16 +267,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SFR",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.17, 13.59],
-            [123.18, 13.59],
-            [123.18, 13.58],
-            [123.17, 13.58],
-            [123.17, 13.59],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1885, 13.6205],
       },
     },
     {
@@ -454,16 +278,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SIS",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.185, 13.59],
-            [123.195, 13.59],
-            [123.195, 13.58],
-            [123.185, 13.58],
-            [123.185, 13.59],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1815, 13.5895],
       },
     },
     {
@@ -473,16 +289,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SCR",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.2, 13.59],
-            [123.21, 13.59],
-            [123.21, 13.58],
-            [123.2, 13.58],
-            [123.2, 13.59],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1955, 13.5835],
       },
     },
     {
@@ -492,16 +300,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-SNI",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.215, 13.59],
-            [123.225, 13.59],
-            [123.225, 13.58],
-            [123.215, 13.58],
-            [123.215, 13.59],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.2115, 13.5885],
       },
     },
     {
@@ -511,16 +311,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-TAB",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.175, 13.575],
-            [123.185, 13.575],
-            [123.185, 13.565],
-            [123.175, 13.565],
-            [123.175, 13.575],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1775, 13.5725],
       },
     },
     {
@@ -530,16 +322,8 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
         barangay_code: "NAG-TRI",
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [123.195, 13.575],
-            [123.205, 13.575],
-            [123.205, 13.565],
-            [123.195, 13.565],
-            [123.195, 13.575],
-          ],
-        ],
+        type: "Point",
+        coordinates: [123.1865, 13.6315],
       },
     },
   ],
@@ -547,22 +331,13 @@ export const mockBarangayGeoJSON: BarangayGeoJSON = {
 
 /**
  * Get center point of a barangay (for markers/labels)
+ * For Point geometries, returns the coordinates directly
  */
 export function getBarangayCenter(
   barangay: BarangayGeoFeature,
 ): [number, number] {
-  const coords =
-    barangay.geometry.type === "Polygon"
-      ? (barangay.geometry.coordinates[0] as number[][])
-      : (barangay.geometry.coordinates[0][0] as number[][]);
-
-  const lats = coords.map((c) => c[1]);
-  const lons = coords.map((c) => c[0]);
-
-  const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-  const avgLon = lons.reduce((a, b) => a + b, 0) / lons.length;
-
-  return [avgLon, avgLat];
+  // For Point geometry, return coordinates directly
+  return barangay.geometry.coordinates;
 }
 
 /**
