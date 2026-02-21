@@ -38,7 +38,6 @@ export async function middleware(request: NextRequest) {
     // Role-based route protection
     const healthWorkerRoute = pathname.startsWith("/dashboard/health-workers");
     const staffRoute = pathname.startsWith("/dashboard/staff");
-    const pregnancyRoute = pathname.startsWith("/dashboard/pregnancy");
 
     if (healthWorkerRoute && session.user.role !== "workers") {
       // Non-health workers trying to access health worker routes
@@ -56,17 +55,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(appropriateRoute, request.url));
     }
 
-    // Pregnancy profiling is restricted to LGU staff, admins, and barangay admins
-    if (
-      pregnancyRoute &&
-      !["staff", "admin", "barangay_admin"].includes(session.user.role)
-    ) {
-      const appropriateRoute =
-        session.user.role === "workers"
-          ? "/dashboard/health-workers"
-          : "/dashboard";
-      return NextResponse.redirect(new URL(appropriateRoute, request.url));
-    }
   }
 
   return NextResponse.next();
