@@ -22,7 +22,8 @@ import {
 import { VaccinationForm } from "./vaccination-form";
 import { MaternalHealthForm } from "./maternal-health-form";
 import { SeniorAssistanceForm } from "./senior-assistance-form";
-import { Search, Loader2 } from "lucide-react";
+import { MedicalConsultationForm } from "./medical-consultation-form";
+import { Search, Loader2, FileText } from "lucide-react";
 
 interface DataEntryPageProps {
   barangay: string;
@@ -163,12 +164,32 @@ export function DataEntryPage({ barangay }: DataEntryPageProps) {
 
       {/* Data Entry Forms */}
       {selected ? (
-        <Tabs defaultValue="vaccination" className="w-full">
-          <TabsList className="mb-6 grid w-full grid-cols-3">
+        <Tabs defaultValue="medical" className="w-full">
+          <TabsList className="mb-6 grid w-full grid-cols-4">
+            <TabsTrigger value="medical" className="flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Medical Form
+            </TabsTrigger>
             <TabsTrigger value="vaccination">Vaccination</TabsTrigger>
             <TabsTrigger value="maternal">Maternal Health</TabsTrigger>
             <TabsTrigger value="senior">Senior Assistance</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="medical">
+            <MedicalConsultationForm
+              barangay={barangay}
+              residentId={selected.id}
+              residentName={selected.full_name}
+              residentData={{
+                full_name: selected.full_name,
+                birth_date: selected.birth_date,
+                sex: selected.sex,
+                philhealth_no: selected.philhealth_no,
+                purok: selected.purok,
+              }}
+              onSuccess={loadResidents}
+            />
+          </TabsContent>
 
           <TabsContent value="vaccination">
             <VaccinationForm
