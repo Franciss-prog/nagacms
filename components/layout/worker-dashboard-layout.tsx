@@ -20,6 +20,7 @@ import {
   MapPin,
   FileText,
   Bell,
+  Pill,
   Menu,
   X,
   LogOut,
@@ -64,6 +65,11 @@ const navigation = [
     name: "Announcements",
     href: "/dashboard-workers/announcements",
     icon: Bell,
+  },
+  {
+    name: "Medication Inventory",
+    href: "/dashboard-workers/medications",
+    icon: Pill,
   },
 ];
 

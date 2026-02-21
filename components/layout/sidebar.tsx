@@ -15,6 +15,7 @@ import {
   Calendar,
   Megaphone,
   Baby,
+  Pill,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,11 @@ const menuItems = [
     href: "/dashboard/health-indicators",
     icon: TrendingUp,
     label: "Health Indicators",
+  },
+  {
+    href: "/dashboard/medications",
+    icon: Pill,
+    label: "Medications",
   },
   {
     href: "/dashboard/pregnancy",
