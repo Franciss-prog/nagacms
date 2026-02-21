@@ -199,7 +199,7 @@ export default function DashboardPage() {
       {/* Barangay Vaccination Coverage GIS Map */}
       <section>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-          Vaccination Coverage by Barangay
+         Health Coverage by Barangay
         </h2>
         <BarangayGisMapIntegrated
           useMockData={true}
