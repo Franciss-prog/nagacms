@@ -102,8 +102,103 @@ export const photoUploadSchema = z.object({
       (file) => file.size <= 5 * 1024 * 1024,
       "File size must be less than 5MB",
     ),
-  recordType: z.enum(["vaccination", "maternal", "senior"]),
+  recordType: z.enum([
+    "vaccination",
+    "maternal",
+    "senior",
+    "medical_consultation",
+  ]),
   recordId: z.string().uuid(),
 });
 
 export type PhotoUploadInput = z.infer<typeof photoUploadSchema>;
+
+/**
+ * Medical Consultation Record Schema (CHU/RHU Form)
+ */
+export const consultationTypeEnum = z.enum([
+  "general",
+  "family_planning",
+  "prenatal",
+  "postpartum",
+  "tuberculosis",
+  "dental_care",
+  "child_care",
+  "immunization",
+  "child_nutrition",
+  "sick_children",
+  "injury",
+  "firecracker_injury",
+  "adult_immunization",
+]);
+
+export const medicalConsultationRecordSchema = z.object({
+  // Patient Information (Section I)
+  resident_id: z.string().uuid().optional(), // Optional - can be manual entry
+  last_name: z.string().min(1, "Last name is required"),
+  first_name: z.string().min(1, "First name is required"),
+  middle_name: z.string().optional(),
+  suffix: z.string().optional(),
+  age: z
+    .number()
+    .int()
+    .min(0, "Age must be 0 or greater")
+    .max(150, "Invalid age"),
+  sex: z.enum(["M", "F"], { required_error: "Sex is required" }),
+  address: z.string().min(1, "Address is required"),
+  philhealth_id: z.string().optional(),
+
+  // Barangay (auto-filled from worker's assignment)
+  barangay: z.string().min(1, "Barangay is required"),
+
+  // CHU/RHU Personnel Fields (Section II)
+  mode_of_transaction: z.enum(["walk_in", "visited", "referral"], {
+    required_error: "Mode of transaction is required",
+  }),
+  referred_from: z.string().optional(),
+  referred_to: z.string().optional(),
+
+  // Consultation Details
+  consultation_date: z.string().date("Invalid consultation date"),
+  consultation_time: z.string().optional(), // HH:MM format
+
+  // Vital Signs
+  temperature: z.number().min(30).max(45).optional(),
+  blood_pressure_systolic: z.number().int().min(50).max(300).optional(),
+  blood_pressure_diastolic: z.number().int().min(30).max(200).optional(),
+  weight_kg: z.number().min(0.5).max(500).optional(),
+  height_cm: z.number().min(20).max(300).optional(),
+
+  // Provider Info
+  attending_provider: z.string().min(1, "Attending provider is required"),
+  referral_reason: z.string().optional(),
+  referred_by: z.string().optional(),
+
+  // Nature of Visit
+  nature_of_visit: z.enum(["new_consultation", "new_admission", "follow_up"], {
+    required_error: "Nature of visit is required",
+  }),
+
+  // Type of Consultation (multiple allowed)
+  consultation_types: z
+    .array(consultationTypeEnum)
+    .min(1, "At least one consultation type is required"),
+
+  // Clinical Fields
+  chief_complaints: z.string().optional(),
+  diagnosis: z.string().optional(),
+  consultation_notes: z.string().optional(),
+  medication_treatment: z.string().optional(),
+  laboratory_findings: z.string().optional(),
+  performed_laboratory_test: z.string().optional(),
+
+  // Healthcare Provider Signature
+  healthcare_provider_name: z
+    .string()
+    .min(1, "Healthcare provider name is required"),
+});
+
+export type MedicalConsultationRecordInput = z.infer<
+  typeof medicalConsultationRecordSchema
+>;
+export type ConsultationType = z.infer<typeof consultationTypeEnum>;

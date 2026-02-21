@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   LogOut,
   User,
   Settings,
+  Stethoscope,
 } from "lucide-react";
 import { workerLogoutAction } from "@/lib/actions/worker-auth";
 import type { User as UserType } from "@/lib/types";
@@ -40,6 +41,11 @@ const navigation = [
     name: "Dashboard",
     href: "/dashboard-workers",
     icon: Home,
+  },
+  {
+    name: "Data Entry",
+    href: "/dashboard-workers/data-entry",
+    icon: Stethoscope,
   },
   {
     name: "My Assignments",
@@ -79,6 +85,12 @@ export function WorkerDashboardLayout({
 }: WorkerDashboardLayoutProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch with Radix UI components
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     await workerLogoutAction();
@@ -171,48 +183,61 @@ export function WorkerDashboardLayout({
           </div>
 
           {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 border-2 border-emerald-300">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                    {getUserInitials(user.username)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden text-sm font-medium md:inline-block">
-                  {user.username}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.username}</p>
-                  <p className="text-xs text-slate-500">
-                    Role:{" "}
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-600"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {mounted ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border-2 border-emerald-300">
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                      {getUserInitials(user.username)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden text-sm font-medium md:inline-block">
+                    {user.username}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{user.username}</p>
+                    <p className="text-xs text-slate-500">
+                      Role:{" "}
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 border-2 border-emerald-300">
+                <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                  {getUserInitials(user.username)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden text-sm font-medium md:inline-block">
+                {user.username}
+              </span>
+            </Button>
+          )}
         </header>
 
         {/* Page Content */}

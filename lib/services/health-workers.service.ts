@@ -318,3 +318,93 @@ export async function getHealthFacilitiesByBarangay(barangay: string) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Medical Consultation Records Service
+ */
+type MedicalConsultationRecord = any;
+
+export async function getMedicalConsultationRecords(barangay: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("medical_consultation_records")
+    .select("*")
+    .eq("barangay", barangay)
+    .order("consultation_date", { ascending: false });
+
+  if (error) throw error;
+  return data as MedicalConsultationRecord[];
+}
+
+export async function getMedicalConsultationRecordsByResident(
+  residentId: string,
+) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("medical_consultation_records")
+    .select("*")
+    .eq("resident_id", residentId)
+    .order("consultation_date", { ascending: false });
+
+  if (error) throw error;
+  return data as MedicalConsultationRecord[];
+}
+
+export async function getMedicalConsultationRecordById(id: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("medical_consultation_records")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data as MedicalConsultationRecord;
+}
+
+export async function createMedicalConsultationRecord(
+  record: Omit<MedicalConsultationRecord, "id" | "created_at" | "updated_at">,
+) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("medical_consultation_records")
+    .insert([record])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as MedicalConsultationRecord;
+}
+
+export async function updateMedicalConsultationRecord(
+  id: string,
+  updates: Partial<MedicalConsultationRecord>,
+) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("medical_consultation_records")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as MedicalConsultationRecord;
+}
+
+export async function deleteMedicalConsultationRecord(id: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase
+    .from("medical_consultation_records")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return true;
+}

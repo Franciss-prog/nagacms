@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { YakakTable } from "./yakap-table";
+import { YakakDetailDialog } from "./yakap-detail-dialog";
+import type { YakakApplication, Resident, User } from "@/lib/types";
 
 interface YakakApplicationListProps {
-  applications: any[];
+  applications: (YakakApplication & { resident?: Resident; approver?: User })[];
   isLoading?: boolean;
   isStaff?: boolean;
   onStatusUpdated?: () => void;
@@ -34,6 +36,29 @@ export function YakakApplicationsList({
   isStaff = false,
   onStatusUpdated,
 }: YakakApplicationListProps) {
+  const [selectedApplication, setSelectedApplication] = useState<
+    (YakakApplication & { resident?: Resident; approver?: User }) | null
+  >(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleViewDetails = (id: string) => {
+    const app = applications.find((a) => a.id === id);
+    if (app) {
+      setSelectedApplication(app);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedApplication(null);
+  };
+
+  const handleApprovalChange = () => {
+    handleCloseDialog();
+    onStatusUpdated?.();
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -48,12 +73,21 @@ export function YakakApplicationsList({
   // Use the new YakakTable component if staff, otherwise use the old list view
   if (isStaff) {
     return (
-      <YakakTable
-        applications={applications}
-        isLoading={isLoading}
-        isStaff={true}
-        onStatusUpdated={onStatusUpdated}
-      />
+      <>
+        <YakakTable
+          applications={applications}
+          isLoading={isLoading}
+          isStaff={true}
+          onStatusUpdated={onStatusUpdated}
+          onViewDetails={handleViewDetails}
+        />
+        <YakakDetailDialog
+          application={selectedApplication}
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          onApprovalChange={handleApprovalChange}
+        />
+      </>
     );
   }
 

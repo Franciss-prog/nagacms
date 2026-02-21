@@ -67,11 +67,13 @@ export interface YakakFormData {
 
 export function YakakForm({
   residents,
-  isLoading = false,
+  isLoading,
   onSubmit,
   onSuccess,
 }: YakakFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Ensure consistent boolean value for hydration
+  const loading = Boolean(isLoading);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [barangaySearch, setBarangaySearch] = useState("");
@@ -319,7 +321,7 @@ export function YakakForm({
           <div className="flex gap-3">
             <Button
               type="submit"
-              disabled={isSubmitting || isLoading}
+              disabled={isSubmitting || loading}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting && (
@@ -343,7 +345,7 @@ export function YakakForm({
                 setSuccess(false);
                 setErrors({});
               }}
-              disabled={isSubmitting || isLoading}
+              disabled={isSubmitting || loading}
             >
               Clear
             </Button>

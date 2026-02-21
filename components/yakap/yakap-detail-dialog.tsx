@@ -150,7 +150,7 @@ export function YakakDetailDialog({
                   Full Name
                 </Label>
                 <p className="mt-1 font-medium">
-                  {application.resident?.full_name}
+                  {application.resident?.full_name || application.resident_name}
                 </p>
               </div>
               <div>
@@ -165,7 +165,9 @@ export function YakakDetailDialog({
                 <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                   Barangay
                 </Label>
-                <p className="mt-1 text-sm">{application.resident?.barangay}</p>
+                <p className="mt-1 text-sm">
+                  {application.resident?.barangay || application.barangay}
+                </p>
               </div>
               <div>
                 <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
