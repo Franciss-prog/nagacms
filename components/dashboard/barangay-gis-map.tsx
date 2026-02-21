@@ -30,24 +30,39 @@ import {
 } from "@/lib/utils/mock-barangay-geojson";
 import { ChevronDown, FlaskConical } from "lucide-react";
 
-// Create custom marker icons based on coverage level
-const createCustomIcon = (coverage: number) => {
+// Create custom map pin marker icons based on coverage level
+const createCustomIcon = (coverage: number, barangayName: string) => {
   const color = getCoverageColor(coverage);
   const fillColor = color.fill;
 
+  // Map pin SVG with barangay name label
   const svgIcon = `
-    <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="20" cy="20" r="15" fill="${fillColor}" stroke="#fff" stroke-width="3" opacity="0.9"/>
-      <text x="20" y="25" font-family="Arial" font-size="12" font-weight="bold" fill="#fff" text-anchor="middle">${Math.round(coverage)}%</text>
+    <svg width="36" height="48" viewBox="0 0 36 48" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="shadow-${barangayName.replace(/\s/g, "")}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+      <!-- Pin shape -->
+      <path d="M18 0C8.06 0 0 8.06 0 18c0 12.627 18 30 18 30s18-17.373 18-30C36 8.06 27.94 0 18 0z" 
+            fill="${fillColor}" 
+            stroke="#fff" 
+            stroke-width="2"
+            filter="url(#shadow-${barangayName.replace(/\s/g, "")})"/>
+      <!-- Inner circle -->
+      <circle cx="18" cy="16" r="10" fill="#fff" opacity="0.95"/>
+      <!-- Health icon (heart/pulse symbol) -->
+      <path d="M18 12c-0.5-0.5-1.3-0.8-2-0.8-1.5 0-2.7 1.2-2.7 2.7 0 2.5 4.7 5.8 4.7 5.8s4.7-3.3 4.7-5.8c0-1.5-1.2-2.7-2.7-2.7-0.7 0-1.5 0.3-2 0.8z" 
+            fill="${fillColor}"/>
     </svg>
   `;
 
   return L.divIcon({
     html: svgIcon,
     className: "custom-marker-icon",
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
+    iconSize: [36, 48],
+    iconAnchor: [18, 48],
+    popupAnchor: [0, -48],
   });
 };
 
@@ -123,9 +138,9 @@ function GisMapContent({
       const coverage = barangayData.vaccination_coverage;
       const center = getBarangayCenter(feature);
 
-      // Create marker with custom icon
+      // Create marker with custom map pin icon
       const marker = L.marker([center[1], center[0]], {
-        icon: createCustomIcon(coverage),
+        icon: createCustomIcon(coverage, barangayName),
       }).addTo(map);
 
       // Add popup with details
@@ -295,8 +310,8 @@ export function BarangayGisMap({
       </CardHeader>
       <CardContent className="p-0" suppressHydrationWarning>
         <MapContainer
-          center={[13.6075, 123.19]}
-          zoom={11.5}
+          center={[13.6219, 123.1948]}
+          zoom={13}
           className={`${height} w-full rounded-lg`}
           style={{ zIndex: 0 }}
         >
