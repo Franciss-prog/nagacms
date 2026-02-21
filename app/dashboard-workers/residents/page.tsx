@@ -27,15 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Search,
-  Users,
-  AlertCircle,
-  Download,
-  Phone,
-  MapPin,
-} from "lucide-react";
-import { Loader } from "@/components/ui/loader";
+import { Search, Users, Download, Phone, AlertCircle } from "lucide-react";
 
 export default function ResidentsPage() {
   const [session, setSession] = useState<any>(null);
@@ -46,6 +38,7 @@ export default function ResidentsPage() {
   const [purokFilter, setPurokFilter] = useState<string | null>(null);
   const [ageFilter, setAgeFilter] = useState<string | null>(null);
   const [puroks, setPuroks] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const supabase = useSupabaseClient();
 
   useEffect(() => {
@@ -54,16 +47,32 @@ export default function ResidentsPage() {
         const sess = await getSession();
         setSession(sess);
 
-        if (!supabase || !sess) return;
+        if (!supabase || !sess) {
+          console.log("Early return - supabase:", !!supabase, "sess:", !!sess);
+          return;
+        }
+
+        console.log(
+          "Fetching residents for barangay:",
+          sess.user.assigned_barangay,
+        );
 
         // Fetch all residents in barangay
-        const { data: residentsData } = await supabase
+        const { data: residentsData, error: queryError } = await supabase
           .from("residents")
           .select(
-            "id, full_name, barangay, purok, birth_date, sex, phone, address",
+            "id, full_name, barangay, purok, birth_date, sex, contact_number, philhealth_no",
           )
           .eq("barangay", sess.user.assigned_barangay)
           .order("full_name");
+
+        console.log("Query result:", { residentsData, queryError });
+
+        if (queryError) {
+          console.error("Query error:", queryError);
+          setError(queryError.message);
+          return;
+        }
 
         setResidents(residentsData || []);
 
@@ -77,6 +86,7 @@ export default function ResidentsPage() {
         applyFilters(residentsData || [], "", null, null);
       } catch (err) {
         console.error("Error loading residents:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
@@ -113,8 +123,8 @@ export default function ResidentsPage() {
       filtered = filtered.filter(
         (r) =>
           r.full_name.toLowerCase().includes(term) ||
-          (r.phone && r.phone.includes(term)) ||
-          (r.address && r.address.toLowerCase().includes(term)),
+          (r.contact_number && r.contact_number.includes(term)) ||
+          (r.philhealth_no && r.philhealth_no.toLowerCase().includes(term)),
       );
     }
 
@@ -177,6 +187,17 @@ export default function ResidentsPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+            <AlertCircle className="h-5 w-5" />
+            <p className="font-medium">Error loading residents</p>
+          </div>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-300">{error}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -275,7 +296,7 @@ export default function ResidentsPage() {
                     <TableHead>Age</TableHead>
                     <TableHead>Purok</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Address</TableHead>
+                    <TableHead>PhilHealth No.</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,7 +313,7 @@ export default function ResidentsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {resident.sex === "M" ? "Male" : "Female"}
+                            {resident.sex || "N/A"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -305,24 +326,17 @@ export default function ResidentsPage() {
                           {resident.purok}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {resident.phone ? (
+                          {resident.contact_number ? (
                             <div className="flex items-center gap-1">
                               <Phone className="h-3 w-3" />
-                              {resident.phone}
+                              {resident.contact_number}
                             </div>
                           ) : (
                             <span className="text-slate-400">-</span>
                           )}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {resident.address ? (
-                            <div className="flex items-start gap-1">
-                              <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                              <span className="line-clamp-2">
-                                {resident.address}
-                              </span>
-                            </div>
-                          ) : (
+                          {resident.philhealth_no || (
                             <span className="text-slate-400">-</span>
                           )}
                         </TableCell>
