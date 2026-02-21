@@ -144,7 +144,7 @@ export const medicalConsultationRecordSchema = z.object({
     .int()
     .min(0, "Age must be 0 or greater")
     .max(150, "Invalid age"),
-  sex: z.enum(["M", "F"], { required_error: "Sex is required" }),
+  sex: z.enum(["M", "F"], { message: "Sex is required" }),
   address: z.string().min(1, "Address is required"),
   philhealth_id: z.string().optional(),
 
@@ -153,7 +153,7 @@ export const medicalConsultationRecordSchema = z.object({
 
   // CHU/RHU Personnel Fields (Section II)
   mode_of_transaction: z.enum(["walk_in", "visited", "referral"], {
-    required_error: "Mode of transaction is required",
+    message: "Mode of transaction is required",
   }),
   referred_from: z.string().optional(),
   referred_to: z.string().optional(),
@@ -176,7 +176,7 @@ export const medicalConsultationRecordSchema = z.object({
 
   // Nature of Visit
   nature_of_visit: z.enum(["new_consultation", "new_admission", "follow_up"], {
-    required_error: "Nature of visit is required",
+    message: "Nature of visit is required",
   }),
 
   // Type of Consultation (multiple allowed)
