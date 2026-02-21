@@ -53,6 +53,11 @@ const menuItems = [
     label: "Pregnancy Profiling",
   },
   { href: "/dashboard/staff", icon: Users, label: "Staff Management" },
+  {
+    href: "/dashboard/barangay-profiling",
+    icon: Megaphone,
+    label: "Barangay Profiling",
+  },
 ];
 
 export function Sidebar({ user, isOpen = true, onClose }: SidebarProps) {
