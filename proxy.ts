@@ -2,12 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 
 /**
- * Middleware to protect dashboard routes and enforce role-based access
+ * Proxy to protect dashboard routes and enforce role-based access
  * - Redirects unauthenticated users to /auth/login
  * - Routes users to appropriate dashboard based on role
  * - Enforces health worker access control
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Protected routes
@@ -54,7 +54,6 @@ export async function middleware(request: NextRequest) {
           : "/dashboard";
       return NextResponse.redirect(new URL(appropriateRoute, request.url));
     }
-
   }
 
   return NextResponse.next();
