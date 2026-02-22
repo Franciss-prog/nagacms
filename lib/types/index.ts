@@ -313,3 +313,54 @@ export interface HealthWorker {
   // Populated in queries
   user?: User;
 }
+
+// ============================================================================
+// QR SCANNER TYPES
+// ============================================================================
+
+/** Payload embedded in the Aramon-generated QR code */
+export interface NagaCareQRPayload {
+  type: "nagacare_resident";
+  v: 1;
+  id: string; // resident UUID
+  name: string;
+  barangay: string;
+}
+
+/** Row in qr_scan_logs table */
+export interface QrScanLog {
+  id: string;
+  resident_id: string;
+  scanned_by: string;
+  scanned_at: string;
+  facility_id?: string | null;
+  device_info?: string | null;
+  notes?: string | null;
+  // Populated in queries
+  scanner?: User;
+  facility?: HealthFacility;
+}
+
+/** Aggregated resident profile – all data returned in one call */
+export interface ResidentFullProfile {
+  resident: Resident;
+  appointments: (Appointment & { facility?: HealthFacility })[];
+  pregnancyProfiles: PregnancyProfile[];
+  yakap: YakakApplication[];
+  scanLogs: QrScanLog[];
+}
+
+/** Simplified pregnancy profile row for display */
+export interface PregnancyProfile {
+  id: string;
+  resident_id: string;
+  visit_date: string;
+  lmp?: string | null;
+  aog_weeks?: number | null;
+  gravida?: number | null;
+  para?: number | null;
+  risk_level?: string | null;
+  attending_midwife?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}

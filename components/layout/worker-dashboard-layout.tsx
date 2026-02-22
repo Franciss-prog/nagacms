@@ -27,6 +27,7 @@ import {
   User,
   Settings,
   Stethoscope,
+  QrCode,
 } from "lucide-react";
 import { workerLogoutAction } from "@/lib/actions/worker-auth";
 import type { User as UserType } from "@/lib/types";
@@ -181,6 +182,17 @@ export function WorkerDashboardLayout({
               Worker Portal
             </h2>
           </div>
+
+          {/* QR Scanner quick-access button */}
+          <Link href="/dashboard-workers/scanner">
+            <Button
+              size="sm"
+              className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              <QrCode className="h-4 w-4" />
+              <span className="hidden sm:inline">Scan QR</span>
+            </Button>
+          </Link>
 
           {/* User Menu */}
           {mounted ? (
