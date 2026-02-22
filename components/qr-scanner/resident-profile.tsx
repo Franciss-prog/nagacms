@@ -146,6 +146,8 @@ export function ResidentProfile({ profile, onScanAnother }: ResidentProfileProps
   const { resident, appointments, pregnancyProfiles, yakap, scanLogs } =
     profile;
 
+  const isMale = resident.sex === "Male";
+
   const handlePrint = () => {
     // Open a print-friendly version of the page
     window.print();
@@ -215,15 +217,17 @@ export function ResidentProfile({ profile, onScanAnother }: ResidentProfileProps
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="pregnancy" className="gap-1.5 text-xs sm:text-sm">
-            <Baby className="h-3.5 w-3.5" />
-            Prenatal
-            {pregnancyProfiles.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs">
-                {pregnancyProfiles.length}
-              </Badge>
-            )}
-          </TabsTrigger>
+          {!isMale && (
+            <TabsTrigger value="pregnancy" className="gap-1.5 text-xs sm:text-sm">
+              <Baby className="h-3.5 w-3.5" />
+              Prenatal
+              {pregnancyProfiles.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {pregnancyProfiles.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="yakap" className="gap-1.5 text-xs sm:text-sm">
             <Heart className="h-3.5 w-3.5" />
             Yakap
@@ -328,8 +332,8 @@ export function ResidentProfile({ profile, onScanAnother }: ResidentProfileProps
           </Card>
         </TabsContent>
 
-        {/* ── Tab 3: Pregnancy & Prenatal Records ─────────────────────────── */}
-        <TabsContent value="pregnancy">
+        {/* ── Tab 3: Pregnancy & Prenatal Records (hidden for male residents) ── */}
+        {!isMale && <TabsContent value="pregnancy">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
@@ -404,7 +408,7 @@ export function ResidentProfile({ profile, onScanAnother }: ResidentProfileProps
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
         {/* ── Tab 4: Yakap / PhilHealth Konsulta ──────────────────────────── */}
         <TabsContent value="yakap">
