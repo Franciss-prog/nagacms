@@ -266,11 +266,13 @@ function stringifyHistorySelections(values: Set<string>) {
 function FieldGroup({
   label,
   required,
+  error,
   children,
   className,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -281,6 +283,7 @@ function FieldGroup({
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 }
@@ -290,9 +293,11 @@ function FieldGroup({
 function Part1({
   data,
   onChange,
+  errors,
 }: {
   data: BarangayProfileFormData;
   onChange: (field: keyof BarangayProfileFormData, value: string) => void;
+  errors: Partial<Record<keyof BarangayProfileFormData, string>>;
 }) {
   const isMarried = data.civilStatus === "married";
   const isEmployed = data.employmentStatus === "employed";
@@ -308,12 +313,17 @@ function Part1({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldGroup label="Type of Membership" required>
+          <FieldGroup label="Type of Membership" required error={errors.membershipType}>
             <Select
               value={data.membershipType}
               onValueChange={(v) => onChange("membershipType", v)}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={cn(
+                  errors.membershipType &&
+                    "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+                )}
+              >
                 <SelectValue placeholder="Select membership type" />
               </SelectTrigger>
               <SelectContent>
@@ -343,18 +353,26 @@ function Part1({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FieldGroup label="Last Name" required>
+          <FieldGroup label="Last Name" required error={errors.lastName}>
             <Input
               placeholder="Enter last name"
               value={data.lastName}
               onChange={(e) => onChange("lastName", e.target.value)}
+              className={cn(
+                errors.lastName &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="First Name" required>
+          <FieldGroup label="First Name" required error={errors.firstName}>
             <Input
               placeholder="Enter first name"
               value={data.firstName}
               onChange={(e) => onChange("firstName", e.target.value)}
+              className={cn(
+                errors.firstName &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
           <FieldGroup label="Middle Name">
@@ -382,7 +400,7 @@ function Part1({
               </SelectContent>
             </Select>
           </FieldGroup>
-          <FieldGroup label="Age" required>
+          <FieldGroup label="Age" required error={errors.age}>
             <Input
               type="number"
               min={0}
@@ -390,21 +408,34 @@ function Part1({
               placeholder="Age"
               value={data.age}
               onChange={(e) => onChange("age", e.target.value)}
+              className={cn(
+                errors.age &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="Birthdate" required>
+          <FieldGroup label="Birthdate" required error={errors.birthdate}>
             <Input
               type="date"
               value={data.birthdate}
               onChange={(e) => onChange("birthdate", e.target.value)}
+              className={cn(
+                errors.birthdate &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="Civil Status" required>
+          <FieldGroup label="Civil Status" required error={errors.civilStatus}>
             <Select
               value={data.civilStatus}
               onValueChange={(v) => onChange("civilStatus", v)}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={cn(
+                  errors.civilStatus &&
+                    "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+                )}
+              >
                 <SelectValue placeholder="Select civil status" />
               </SelectTrigger>
               <SelectContent>
@@ -688,9 +719,11 @@ function Part2({
 function Part3({
   data,
   onChange,
+  errors,
 }: {
   data: BarangayProfileFormData;
   onChange: (field: keyof BarangayProfileFormData, value: string) => void;
+  errors: Partial<Record<keyof BarangayProfileFormData, string>>;
 }) {
   return (
     <div className="space-y-6">
@@ -702,32 +735,56 @@ function Part3({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldGroup label="Barangay" required>
+          <FieldGroup label="Barangay" required error={errors.currentBarangay}>
             <Input
               placeholder="Enter barangay"
               value={data.currentBarangay}
               onChange={(e) => onChange("currentBarangay", e.target.value)}
+              className={cn(
+                errors.currentBarangay &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="House No. / Street Name" required>
+          <FieldGroup
+            label="House No. / Street Name"
+            required
+            error={errors.currentStreet}
+          >
             <Input
               placeholder="e.g. 123 Rizal St."
               value={data.currentStreet}
               onChange={(e) => onChange("currentStreet", e.target.value)}
+              className={cn(
+                errors.currentStreet &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="City / Municipality" required>
+          <FieldGroup
+            label="City / Municipality"
+            required
+            error={errors.currentCity}
+          >
             <Input
               placeholder="Enter city or municipality"
               value={data.currentCity}
               onChange={(e) => onChange("currentCity", e.target.value)}
+              className={cn(
+                errors.currentCity &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
-          <FieldGroup label="Province" required>
+          <FieldGroup label="Province" required error={errors.currentProvince}>
             <Input
               placeholder="Enter province"
               value={data.currentProvince}
               onChange={(e) => onChange("currentProvince", e.target.value)}
+              className={cn(
+                errors.currentProvince &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
         </CardContent>
@@ -803,12 +860,16 @@ function Part3({
               onChange={(e) => onChange("email", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="Mobile Number" required>
+          <FieldGroup label="Mobile Number" required error={errors.mobile}>
             <Input
               type="tel"
               placeholder="09XXXXXXXXX"
               value={data.mobile}
               onChange={(e) => onChange("mobile", e.target.value)}
+              className={cn(
+                errors.mobile &&
+                  "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+              )}
             />
           </FieldGroup>
         </CardContent>
@@ -822,9 +883,11 @@ function Part3({
 function Part4({
   data,
   onChange,
+  errors,
 }: {
   data: BarangayProfileFormData;
   onChange: (field: keyof BarangayProfileFormData, value: string) => void;
+  errors: Partial<Record<keyof BarangayProfileFormData, string>>;
 }) {
   const isPregnant = data.isPregnant === "yes";
   const selectedPastMedical = parseHistorySelections(data.pastMedicalHistory);
@@ -856,14 +919,19 @@ function Part4({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FieldGroup label="Currently Pregnant?" required>
+          <FieldGroup label="Currently Pregnant?" required error={errors.isPregnant}>
             <Select
               value={data.isPregnant}
               onValueChange={(v) =>
                 onChange("isPregnant", v as BarangayProfileFormData["isPregnant"])
               }
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={cn(
+                  errors.isPregnant &&
+                    "border-red-500 focus-visible:ring-red-500/20 dark:border-red-400"
+                )}
+              >
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
               <SelectContent>
@@ -1308,6 +1376,11 @@ function Part5({
 const PARTS = ["part-1", "part-2", "part-3", "part-4", "part-5"] as const;
 type Part = (typeof PARTS)[number];
 
+type RequiredFieldConfig = {
+  field: keyof BarangayProfileFormData;
+  label: string;
+};
+
 const PART_LABELS: Record<Part, string> = {
   "part-1": "Personal Info",
   "part-2": "Family Background",
@@ -1315,6 +1388,42 @@ const PART_LABELS: Record<Part, string> = {
   "part-4": "Pregnancy & Medical",
   "part-5": "Family & Personal History",
 };
+
+const REQUIRED_FIELDS_BY_PART: Record<Part, RequiredFieldConfig[]> = {
+  "part-1": [
+    { field: "membershipType", label: "Type of Membership" },
+    { field: "lastName", label: "Last Name" },
+    { field: "firstName", label: "First Name" },
+    { field: "age", label: "Age" },
+    { field: "birthdate", label: "Birthdate" },
+    { field: "civilStatus", label: "Civil Status" },
+  ],
+  "part-2": [],
+  "part-3": [
+    { field: "currentBarangay", label: "Current Address Barangay" },
+    { field: "currentStreet", label: "Current Address House No. / Street Name" },
+    { field: "currentCity", label: "Current Address City / Municipality" },
+    { field: "currentProvince", label: "Current Address Province" },
+    { field: "mobile", label: "Mobile Number" },
+  ],
+  "part-4": [{ field: "isPregnant", label: "Currently Pregnant?" }],
+  "part-5": [],
+};
+
+function hasAnswer(value: string) {
+  return value.trim().length > 0;
+}
+
+function getMissingRequiredFields(
+  formData: BarangayProfileFormData,
+  part?: Part
+) {
+  const partsToCheck = part ? [part] : PARTS;
+
+  return partsToCheck.flatMap((p) =>
+    REQUIRED_FIELDS_BY_PART[p].filter(({ field }) => !hasAnswer(formData[field]))
+  );
+}
 
 interface BarangayProfileFormProps {
   initialData?: Partial<BarangayProfileFormData>;
@@ -1336,17 +1445,90 @@ export function BarangayProfileForm({
     ...initialData,
   });
   const [activePart, setActivePart] = useState<Part>("part-1");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof BarangayProfileFormData, string>>
+  >({});
+  const [validationMessage, setValidationMessage] = useState<string>("");
 
   const handleChange = (
     field: keyof BarangayProfileFormData,
     value: string
   ) => {
     setData((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const currentIndex = PARTS.indexOf(activePart);
 
+  const setMissingFieldErrors = (missingFields: RequiredFieldConfig[]) => {
+    const nextErrors: Partial<Record<keyof BarangayProfileFormData, string>> = {};
+    missingFields.forEach(({ field }) => {
+      nextErrors[field] = "This field is required.";
+    });
+    setFieldErrors(nextErrors);
+  };
+
+  const validatePart = (part: Part, actionLabel: "continue" | "save") => {
+    const missingFields = getMissingRequiredFields(data, part);
+
+    if (missingFields.length === 0) {
+      setValidationMessage("");
+      return true;
+    }
+
+    setMissingFieldErrors(missingFields);
+    setValidationMessage(
+      `Please complete all required fields before you can ${actionLabel}.`
+    );
+    return false;
+  };
+
+  const validateAllRequiredFields = () => {
+    const missingFields = getMissingRequiredFields(data);
+
+    if (missingFields.length === 0) {
+      setValidationMessage("");
+      return true;
+    }
+
+    setMissingFieldErrors(missingFields);
+    setValidationMessage(
+      "Please complete all required fields before you can save this profile."
+    );
+
+    const firstInvalidPart = PARTS.find(
+      (part) => getMissingRequiredFields(data, part).length > 0
+    );
+    if (firstInvalidPart) {
+      setActivePart(firstInvalidPart);
+    }
+
+    return false;
+  };
+
+  const handleStepChange = (targetPart: Part) => {
+    const targetIndex = PARTS.indexOf(targetPart);
+    if (targetIndex > currentIndex && !validatePart(activePart, "continue")) {
+      return;
+    }
+
+    setValidationMessage("");
+    setActivePart(targetPart);
+  };
+
   const goNext = () => {
+    if (!validatePart(activePart, "continue")) {
+      return;
+    }
+
     if (currentIndex < PARTS.length - 1) {
       setActivePart(PARTS[currentIndex + 1]);
     }
@@ -1360,6 +1542,10 @@ export function BarangayProfileForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateAllRequiredFields()) {
+      return;
+    }
+
     onSubmit(data);
   };
 
@@ -1371,7 +1557,7 @@ export function BarangayProfileForm({
           <button
             key={part}
             type="button"
-            onClick={() => setActivePart(part)}
+            onClick={() => handleStepChange(part)}
             className={cn(
               "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors border",
               activePart === part
@@ -1396,19 +1582,25 @@ export function BarangayProfileForm({
 
       {/* Form Parts */}
       {activePart === "part-1" && (
-        <Part1 data={data} onChange={handleChange} />
+        <Part1 data={data} onChange={handleChange} errors={fieldErrors} />
       )}
       {activePart === "part-2" && (
         <Part2 data={data} onChange={handleChange} />
       )}
       {activePart === "part-3" && (
-        <Part3 data={data} onChange={handleChange} />
+        <Part3 data={data} onChange={handleChange} errors={fieldErrors} />
       )}
       {activePart === "part-4" && (
-        <Part4 data={data} onChange={handleChange} />
+        <Part4 data={data} onChange={handleChange} errors={fieldErrors} />
       )}
       {activePart === "part-5" && (
         <Part5 data={data} onChange={handleChange} />
+      )}
+
+      {validationMessage && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+          {validationMessage}
+        </div>
       )}
 
       {/* Navigation & Submit */}
@@ -1433,7 +1625,7 @@ export function BarangayProfileForm({
 
         <div className="flex gap-2">
           {currentIndex < PARTS.length - 1 ? (
-            <Button type="button" onClick={goNext}>
+            <Button type="button" onClick={goNext} disabled={isSubmitting}>
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
