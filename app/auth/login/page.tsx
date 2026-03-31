@@ -2,6 +2,8 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 /**
  * Login page for internal staff
@@ -27,6 +29,19 @@ export default async function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4 dark:from-slate-950 dark:to-slate-900">
       <div className="w-full max-w-md">
+        <div className="mb-3 flex justify-start">
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="border-slate-300/70 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:bg-slate-800/60"
+          >
+            <Link href="/" aria-label="Back to Home" title="Back to Home">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             Health System

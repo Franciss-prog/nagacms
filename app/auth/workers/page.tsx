@@ -2,6 +2,8 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { WorkerLoginForm } from "@/components/auth/worker-login-form";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 /**
  * Login page for workers
@@ -17,9 +19,22 @@ export default async function WorkerLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4 dark:from-green-950 dark:to-emerald-900">
       <div className="w-full max-w-md">
+        <div className="mb-3 flex justify-start">
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="border-emerald-200/70 bg-white/80 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+          >
+            <Link href="/" aria-label="Back to Home" title="Back to Home">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-emerald-900 dark:text-white">
-          City Health Portal
+            City Health Portal
           </h1>
           <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
             City Health Login
