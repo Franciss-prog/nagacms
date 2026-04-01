@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { SidebarToggle } from "@/components/layout/sidebar";
 import type { User } from "@/lib/types";
@@ -22,6 +23,12 @@ export function Header({ user, sidebarOpen, onSidebarToggle }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            Back to Home
+          </Link>
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium text-slate-900 dark:text-white">
               {user.username}
