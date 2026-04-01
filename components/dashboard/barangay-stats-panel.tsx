@@ -1,13 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   getHealthStatus,
@@ -16,6 +9,7 @@ import {
   formatPercentage,
 } from "@/lib/utils/barangay-coverage-utils";
 import { X, TrendingUp, AlertCircle, Users, CheckCircle2 } from "lucide-react";
+import type { CoverageMetricType } from "./barangay-gis-map";
 
 export interface BarangayStatsData {
   barangay: string;
@@ -29,6 +23,9 @@ export interface BarangayStatsData {
 
 interface BarangayStatsPanelProps {
   data: BarangayStatsData | null;
+  metricType?: CoverageMetricType;
+  metricLabel?: string;
+  metricCoverage?: number;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -185,6 +182,9 @@ function HealthScoreMeter({
  */
 export function BarangayStatsPanel({
   data,
+  metricType = "vaccination",
+  metricLabel = "Vaccination Coverage",
+  metricCoverage,
   isOpen,
   onClose,
 }: BarangayStatsPanelProps) {
@@ -192,12 +192,13 @@ export function BarangayStatsPanel({
     return null;
   }
 
+  const activeCoverage = metricCoverage ?? data.vaccination_coverage;
   const healthStatus = getHealthStatus(
-    data.vaccination_coverage,
+    activeCoverage,
     data.pending_interventions,
   );
   const healthScore = calculateHealthScore(
-    data.vaccination_coverage,
+    activeCoverage,
     data.pending_interventions,
     data.total_residents,
   );
@@ -239,7 +240,7 @@ export function BarangayStatsPanel({
           <HealthScoreMeter score={healthScore} />
 
           {/* Coverage Progress */}
-          <CoverageProgressBar coverage={data.vaccination_coverage} />
+          <CoverageProgressBar coverage={activeCoverage} label={metricLabel} />
 
           {/* Key Statistics */}
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -279,28 +280,35 @@ export function BarangayStatsPanel({
             </div>
           </div>
 
-          {/* Vaccination Breakdown */}
+          {/* Coverage Snapshot */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
             <h3 className="font-semibold text-gray-900 mb-3">
-              Vaccination Status
+              {metricType === "vaccination"
+                ? "Vaccination Status"
+                : "Coverage Snapshot"}
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Fully Vaccinated</span>
+                <span className="text-sm text-gray-700">
+                  {metricType === "vaccination"
+                    ? "Fully Vaccinated"
+                    : "Population Covered (Est.)"}
+                </span>
                 <span className="font-semibold text-blue-600">
                   {Math.round(
-                    (data.vaccination_coverage / 100) * data.total_residents,
+                    (activeCoverage / 100) * data.total_residents,
                   ).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-700">
-                  Awaiting Vaccination
+                  {metricType === "vaccination"
+                    ? "Awaiting Vaccination"
+                    : "Needs Follow-up (Est.)"}
                 </span>
                 <span className="font-semibold text-amber-600">
                   {Math.round(
-                    ((100 - data.vaccination_coverage) / 100) *
-                      data.total_residents,
+                    ((100 - activeCoverage) / 100) * data.total_residents,
                   ).toLocaleString()}
                 </span>
               </div>
@@ -308,7 +316,7 @@ export function BarangayStatsPanel({
                 <div
                   className="h-full bg-blue-500 rounded-full"
                   style={{
-                    width: `${data.vaccination_coverage}%`,
+                    width: `${activeCoverage}%`,
                   }}
                 />
               </div>

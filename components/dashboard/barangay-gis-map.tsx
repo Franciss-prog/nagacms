@@ -1,15 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import L from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  GeoJSON,
-  Popup,
-  useMap,
-  Marker,
-} from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   Card,
@@ -20,16 +13,13 @@ import {
 } from "@/components/ui/card";
 import {
   getCoverageColor,
-  getCoverageOpacity,
   formatPercentage,
 } from "@/lib/utils/barangay-coverage-utils";
 import {
   mockBarangayGeoJSON,
   getBarangayCenter,
-  type BarangayGeoFeature,
 } from "@/lib/utils/mock-barangay-geojson";
-import { fallbackBarangayHealthData } from "./fallback-barangay-health-data";
-import { ChevronDown, FlaskConical } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 
 // Create custom map pin marker icons based on coverage level
 const createCustomIcon = (coverage: number, barangayName: string) => {
@@ -77,9 +67,112 @@ export interface BarangayVaccinationData {
   last_updated?: string;
 }
 
+export type CoverageMetricType =
+  | "vaccination"
+  | "pregnancy_monitoring"
+  | "senior_assistance"
+  | "pending_interventions"
+  | "overall";
+
+export const COVERAGE_METRIC_OPTIONS: Array<{
+  value: CoverageMetricType;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "vaccination",
+    label: "Vaccination Coverage",
+    description: "Completed vaccinations by barangay",
+  },
+  {
+    value: "pregnancy_monitoring",
+    label: "Pregnancy Monitoring",
+    description: "Maternal monitoring reach by barangay",
+  },
+  {
+    value: "senior_assistance",
+    label: "Senior Citizen Assistance",
+    description: "Senior support reach by barangay",
+  },
+  {
+    value: "pending_interventions",
+    label: "Intervention Completion",
+    description: "How much demand is already covered",
+  },
+  {
+    value: "overall",
+    label: "Overall Service Coverage",
+    description: "Combined view across major health services",
+  },
+];
+
+const clampCoverage = (value: number) => Math.max(0, Math.min(100, value));
+
+const getPregnancyMonitoringCoverage = (record: BarangayVaccinationData) => {
+  if (!record.total_residents || !record.maternal_health_visits) return 0;
+  return clampCoverage(
+    (record.maternal_health_visits / record.total_residents) * 100,
+  );
+};
+
+const getSeniorAssistanceCoverage = (record: BarangayVaccinationData) => {
+  if (!record.total_residents || !record.senior_citizens_assisted) return 0;
+  return clampCoverage(
+    (record.senior_citizens_assisted / record.total_residents) * 100,
+  );
+};
+
+const getInterventionCompletionCoverage = (record: BarangayVaccinationData) => {
+  if (!record.total_residents) return 0;
+  return clampCoverage(
+    100 - (record.pending_interventions / record.total_residents) * 100,
+  );
+};
+
+export function getMetricCoverage(
+  record: BarangayVaccinationData,
+  metricType: CoverageMetricType,
+): number {
+  switch (metricType) {
+    case "pregnancy_monitoring":
+      return getPregnancyMonitoringCoverage(record);
+    case "senior_assistance":
+      return getSeniorAssistanceCoverage(record);
+    case "pending_interventions":
+      return getInterventionCompletionCoverage(record);
+    case "overall": {
+      const vaccination = clampCoverage(record.vaccination_coverage);
+      const pregnancy = getPregnancyMonitoringCoverage(record);
+      const senior = getSeniorAssistanceCoverage(record);
+      return (vaccination + pregnancy + senior) / 3;
+    }
+    case "vaccination":
+    default:
+      return clampCoverage(record.vaccination_coverage);
+  }
+}
+
+export function getMetricCoverageLabel(metricType: CoverageMetricType): string {
+  return (
+    COVERAGE_METRIC_OPTIONS.find((option) => option.value === metricType)
+      ?.label || "Coverage"
+  );
+}
+
+export function getMetricCoverageDescription(
+  metricType: CoverageMetricType,
+): string {
+  return (
+    COVERAGE_METRIC_OPTIONS.find((option) => option.value === metricType)
+      ?.description || "Coverage analysis"
+  );
+}
+
 export interface BarangayGisMapProps {
   data: BarangayVaccinationData[];
   onBarangaySelect?: (barangay: string, data: BarangayVaccinationData) => void;
+  metricType?: CoverageMetricType;
+  minCoverage?: number;
   title?: string;
   description?: string;
   height?: string;
@@ -88,7 +181,11 @@ export interface BarangayGisMapProps {
 
 // Fix Leaflet icon issue
 const fixLeafletIcons = () => {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  delete (
+    L.Icon.Default.prototype as unknown as {
+      _getIconUrl?: unknown;
+    }
+  )._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl:
       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -105,13 +202,16 @@ const fixLeafletIcons = () => {
 function GisMapContent({
   data,
   onBarangaySelect,
+  metricType,
+  minCoverage,
 }: {
   data: BarangayVaccinationData[];
   onBarangaySelect?: (barangay: string, data: BarangayVaccinationData) => void;
+  metricType: CoverageMetricType;
+  minCoverage: number;
 }) {
   const map = useMap();
   const markersRef = useRef<L.Marker[]>([]);
-  const [hoveredBarangay, setHoveredBarangay] = useState<string | null>(null);
 
   useEffect(() => {
     // Clear existing markers
@@ -120,9 +220,6 @@ function GisMapContent({
 
     // Create a map from barangay names to their data
     const dataMap = new Map(data.map((d) => [d.barangay, d]));
-    const fallbackMap = new Map(
-      fallbackBarangayHealthData.map((d) => [d.barangay, d]),
-    );
 
     // Add markers for each barangay
     mockBarangayGeoJSON.features.forEach((feature) => {
@@ -130,20 +227,23 @@ function GisMapContent({
       let barangayData = dataMap.get(barangayName);
 
       if (!barangayData) {
-        barangayData =
-          fallbackMap.get(barangayName) || {
-            barangay: barangayName,
-            vaccination_coverage: 0,
-            pending_interventions: 0,
-            total_residents: 0,
-            maternal_health_visits: 0,
-            senior_citizens_assisted: 0,
-            last_updated: new Date().toISOString(),
-          };
+        barangayData = {
+          barangay: barangayName,
+          vaccination_coverage: 0,
+          pending_interventions: 0,
+          total_residents: 0,
+          maternal_health_visits: 0,
+          senior_citizens_assisted: 0,
+          last_updated: new Date().toISOString(),
+        };
       }
 
-      const coverage = barangayData.vaccination_coverage;
+      const coverage = getMetricCoverage(barangayData, metricType);
+      if (coverage < minCoverage) {
+        return;
+      }
       const center = getBarangayCenter(feature);
+      const metricLabel = getMetricCoverageLabel(metricType);
 
       // Create marker with custom map pin icon
       const marker = L.marker([center[1], center[0]], {
@@ -156,8 +256,12 @@ function GisMapContent({
           <h4 class="font-bold text-base mb-2">${barangayName}</h4>
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">Vaccination:</span>
+              <span class="text-gray-600">${metricLabel}:</span>
               <span class="font-semibold">${formatPercentage(coverage)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Vaccination:</span>
+              <span class="font-semibold">${formatPercentage(barangayData.vaccination_coverage)}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-600">Residents:</span>
@@ -202,7 +306,6 @@ function GisMapContent({
       });
 
       marker.on("mouseover", () => {
-        setHoveredBarangay(barangayName);
         marker.openPopup();
       });
 
@@ -219,7 +322,7 @@ function GisMapContent({
       markersRef.current.forEach((marker) => map.removeLayer(marker));
       markersRef.current = [];
     };
-  }, [data, map, onBarangaySelect]);
+  }, [data, map, metricType, minCoverage, onBarangaySelect]);
 
   return null;
 }
@@ -229,9 +332,14 @@ function GisMapContent({
  */
 function MapLegend() {
   return (
-    <div className="absolute bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 z-40 max-w-xs">
-      <h3 className="font-semibold text-sm mb-3">Vaccination Coverage</h3>
-      <div className="space-y-2">
+    <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-slate-200 z-40 max-w-xs">
+      <h3 className="font-semibold text-sm mb-1 text-slate-900">
+        Coverage Scale
+      </h3>
+      <p className="text-[11px] text-slate-500 mb-3">
+        Marker colors reflect service coverage level
+      </p>
+      <div className="space-y-2.5">
         <div className="flex items-center gap-2">
           <div
             className="w-6 h-3 rounded"
@@ -271,29 +379,33 @@ function MapLegend() {
 export function BarangayGisMap({
   data,
   onBarangaySelect,
-  title = "Barangay Vaccination Coverage Map",
-  description = "Interactive map showing Naga City barangays with color-coded vaccination coverage markers",
+  metricType = "vaccination",
+  minCoverage = 0,
+  title = "Barangay Health Coverage Map",
+  description = "Interactive map showing Naga City barangays with service coverage markers",
   height = "h-[600px]",
   showLegend = true,
 }: BarangayGisMapProps) {
   const fixIconsRef = useRef(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     if (!fixIconsRef.current && typeof window !== "undefined") {
       fixLeafletIcons();
       fixIconsRef.current = true;
     }
-    setIsMounted(true);
   }, []);
 
   // Only render MapContainer on client-side
-  if (typeof window === "undefined" || !isMounted) {
+  if (typeof window === "undefined") {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+      <Card className="overflow-hidden border-slate-200/80 shadow-sm">
+        <CardHeader className="border-b bg-slate-50/80 px-4 py-3">
+          <CardTitle className="text-base leading-none">{title}</CardTitle>
+          {description ? (
+            <CardDescription className="text-xs mt-1.5">
+              {description}
+            </CardDescription>
+          ) : null}
         </CardHeader>
         <CardContent>
           <div
@@ -310,10 +422,16 @@ export function BarangayGisMap({
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+    <Card className="overflow-hidden border-slate-200/80 shadow-sm">
+      <CardHeader className="border-b bg-slate-50/80 px-4 py-3">
+        <CardTitle className="flex items-center gap-2 text-slate-900 text-base leading-none">
+          {title}
+        </CardTitle>
+        {description ? (
+          <CardDescription className="text-xs mt-1.5">
+            {description}
+          </CardDescription>
+        ) : null}
       </CardHeader>
       <CardContent className="p-0" suppressHydrationWarning>
         <MapContainer
@@ -326,7 +444,12 @@ export function BarangayGisMap({
             attribution='&copy; <a href="https://www.openstht">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <GisMapContent data={data} onBarangaySelect={onBarangaySelect} />
+          <GisMapContent
+            data={data}
+            onBarangaySelect={onBarangaySelect}
+            metricType={metricType}
+            minCoverage={minCoverage}
+          />
           {showLegend && <MapLegend />}
         </MapContainer>
         <style jsx global>{`
@@ -352,6 +475,15 @@ export function BarangayGisMap({
           }
           .leaflet-popup-tip {
             background: white !important;
+          }
+          .leaflet-control-zoom {
+            border: 1px solid #dbe2ea !important;
+            border-radius: 10px !important;
+            overflow: hidden;
+          }
+          .leaflet-control-zoom a {
+            color: #0f172a !important;
+            background: #ffffff !important;
           }
         `}</style>
       </CardContent>

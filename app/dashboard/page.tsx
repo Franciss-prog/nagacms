@@ -203,8 +203,8 @@ export default function DashboardPage() {
         </h2>
         <BarangayGisMapIntegrated
           useFallbackData={true}
-          mapHeight="h-[600px]"
-          showLegend={true}
+          mapHeight="h-[480px]"
+          showLegend={false}
           showMapLegend={true}
         />
       </section>
