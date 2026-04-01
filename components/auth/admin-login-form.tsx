@@ -22,10 +22,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
-import { loginAction } from "@/lib/actions/auth";
-import { AlertCircle, Loader2, UserCog } from "lucide-react";
+import { adminLoginAction } from "@/lib/actions/auth";
+import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 
-export function LoginForm() {
+export function AdminLoginForm() {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -43,7 +43,7 @@ export function LoginForm() {
     setError(null);
 
     try {
-      const result = await loginAction(data);
+      const result = await adminLoginAction(data);
 
       if (!result.success) {
         setError(result.error || "Invalid username or password");
@@ -59,15 +59,13 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-blue-200 dark:border-blue-800">
       <CardHeader className="space-y-1">
         <div className="flex items-center gap-2">
-          <UserCog className="h-6 w-6 text-emerald-600" />
-          <CardTitle className="text-2xl">Staff Login</CardTitle>
+          <ShieldCheck className="h-6 w-6 text-blue-600" />
+          <CardTitle className="text-2xl">Admin Login</CardTitle>
         </div>
-        <CardDescription>
-          Sign in with staff or barangay administrator credentials
-        </CardDescription>
+        <CardDescription>Sign in with system administrator credentials</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -84,14 +82,15 @@ export function LoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Admin Username</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       type="text"
-                      placeholder="Enter your username"
+                      placeholder="Enter admin username"
                       disabled={isPending}
                       autoComplete="username"
+                      className="border-blue-200 focus:border-blue-500 dark:border-blue-800"
                     />
                   </FormControl>
                   <FormMessage />
@@ -109,9 +108,10 @@ export function LoginForm() {
                     <Input
                       {...field}
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Enter password"
                       disabled={isPending}
                       autoComplete="current-password"
+                      className="border-blue-200 focus:border-blue-500 dark:border-blue-800"
                     />
                   </FormControl>
                   <FormMessage />
@@ -119,17 +119,22 @@ export function LoginForm() {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isPending ? "Signing in..." : "Sign In"}
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In as Admin"
+              )}
             </Button>
           </form>
         </Form>
-
-        <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>For staff and barangay administrators only.</p>
-          <p>Admin and worker accounts use dedicated login portals.</p>
-        </div>
       </CardContent>
     </Card>
   );
