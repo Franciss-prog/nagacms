@@ -117,7 +117,7 @@ export function BarangayHealthDashboardLayout({
     name,
   }: {
     href: string;
-    icon: React.React.ComponentType<{ className?: string }>;
+    icon: React.ComponentType<{ className?: string }>;
     name: string;
   }) => (
     <Link
@@ -150,16 +150,30 @@ export function BarangayHealthDashboardLayout({
 
         {/* Main Navigation */}
         <nav className="flex-1 space-y-1 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase text-slate-400">Main</p>
+          <p className="mb-3 text-xs font-semibold uppercase text-slate-400">
+            Main
+          </p>
           {mainNavigation.map((item) => (
-            <NavLink key={item.name} href={item.href} icon={item.icon} name={item.name} />
+            <NavLink
+              key={item.name}
+              href={item.href}
+              icon={item.icon}
+              name={item.name}
+            />
           ))}
 
           <div className="my-4 border-t border-slate-200 dark:border-slate-700" />
 
-          <p className="mb-3 text-xs font-semibold uppercase text-slate-400">Administration</p>
+          <p className="mb-3 text-xs font-semibold uppercase text-slate-400">
+            Administration
+          </p>
           {adminNavigation.map((item) => (
-            <NavLink key={item.name} href={item.href} icon={item.icon} name={item.name} />
+            <NavLink
+              key={item.name}
+              href={item.href}
+              icon={item.icon}
+              name={item.name}
+            />
           ))}
         </nav>
 
@@ -264,11 +278,21 @@ export function BarangayHealthDashboardLayout({
           <nav className="border-b border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950 lg:hidden">
             <div className="space-y-1">
               {mainNavigation.map((item) => (
-                <NavLink key={item.name} href={item.href} icon={item.icon} name={item.name} />
+                <NavLink
+                  key={item.name}
+                  href={item.href}
+                  icon={item.icon}
+                  name={item.name}
+                />
               ))}
               <div className="my-3 border-t border-slate-200 dark:border-slate-700" />
               {adminNavigation.map((item) => (
-                <NavLink key={item.name} href={item.href} icon={item.icon} name={item.name} />
+                <NavLink
+                  key={item.name}
+                  href={item.href}
+                  icon={item.icon}
+                  name={item.name}
+                />
               ))}
             </div>
           </nav>
@@ -276,7 +300,9 @@ export function BarangayHealthDashboardLayout({
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="mx-auto max-w-7xl space-y-6 p-4 lg:p-8">{children}</div>
+          <div className="mx-auto max-w-7xl space-y-6 p-4 lg:p-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>

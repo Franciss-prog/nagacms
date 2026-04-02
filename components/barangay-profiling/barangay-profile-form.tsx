@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, cloneElement, isValidElement } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  validateBarangayProfileForm,
+  hasValidationErrors,
+} from "@/lib/validators/barangay-profile-client";
 import {
   Select,
   SelectContent,
@@ -16,7 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, AlertCircle } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -230,31 +235,37 @@ const HISTORY_OPTIONS = [
   "none",
 ] as const;
 
-const HISTORY_OPTION_LABELS: Record<(typeof HISTORY_OPTIONS)[number], string> = {
-  allergy: "Allergy",
-  asthma: "Asthma",
-  cancer: "Cancer",
-  cerebrovascular_disease: "Cerebrovascular disease",
-  coronary_artery_disease: "Coronary artery disease",
-  diabetes_mellitus: "Diabetes Mellitus",
-  emphysema: "Emphysema",
-  epilepsy_seizure_disorder: "Epilepsy/Seizure Disorder",
-  hepatitis: "Hepatitis",
-  hyperlipidemia: "Hyperlipidemia",
-  hypertension: "Hypertension",
-  peptic_ulcer: "Peptic ulcer",
-  pneumonia: "Pneumonia",
-  thyroid_disease: "Thyroid disease",
-  pulmonary_tuberculosis: "Pulmonary tuberculosis",
-  extrapulmonary_tuberculosis: "Extrapulmonary tuberculosis",
-  urinary_tract_infection: "Urinary tract infection",
-  mental_illness: "Mental illness",
-  others: "Others",
-  none: "None",
-};
+const HISTORY_OPTION_LABELS: Record<(typeof HISTORY_OPTIONS)[number], string> =
+  {
+    allergy: "Allergy",
+    asthma: "Asthma",
+    cancer: "Cancer",
+    cerebrovascular_disease: "Cerebrovascular disease",
+    coronary_artery_disease: "Coronary artery disease",
+    diabetes_mellitus: "Diabetes Mellitus",
+    emphysema: "Emphysema",
+    epilepsy_seizure_disorder: "Epilepsy/Seizure Disorder",
+    hepatitis: "Hepatitis",
+    hyperlipidemia: "Hyperlipidemia",
+    hypertension: "Hypertension",
+    peptic_ulcer: "Peptic ulcer",
+    pneumonia: "Pneumonia",
+    thyroid_disease: "Thyroid disease",
+    pulmonary_tuberculosis: "Pulmonary tuberculosis",
+    extrapulmonary_tuberculosis: "Extrapulmonary tuberculosis",
+    urinary_tract_infection: "Urinary tract infection",
+    mental_illness: "Mental illness",
+    others: "Others",
+    none: "None",
+  };
 
 function parseHistorySelections(value: string) {
-  return new Set(value.split("|").map((v) => v.trim()).filter(Boolean));
+  return new Set(
+    value
+      .split("|")
+      .map((v) => v.trim())
+      .filter(Boolean),
+  );
 }
 
 function stringifyHistorySelections(values: Set<string>) {
@@ -268,19 +279,40 @@ function FieldGroup({
   required,
   children,
   className,
+  error,
 }: {
   label: string;
   required?: boolean;
   children: React.ReactNode;
   className?: string;
+  error?: string;
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+      <Label
+        className={cn(
+          "text-sm font-medium",
+          error
+            ? "text-red-600 dark:text-red-400"
+            : "text-slate-700 dark:text-slate-300",
+        )}
+      >
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </Label>
-      {children}
+      <div className={cn(error && "relative")}>
+        {isValidElement(children)
+          ? cloneElement(children, {
+              "aria-invalid": error ? true : undefined,
+            } as any)
+          : children}
+      </div>
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -290,9 +322,11 @@ function FieldGroup({
 function Part1({
   data,
   onChange,
+  errors = {},
 }: {
   data: BarangayProfileFormData;
   onChange: (field: keyof BarangayProfileFormData, value: string) => void;
+  errors?: Record<string, string>;
 }) {
   const isMarried = data.civilStatus === "married";
   const isEmployed = data.employmentStatus === "employed";
@@ -308,7 +342,11 @@ function Part1({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldGroup label="Type of Membership" required>
+          <FieldGroup
+            label="Type of Membership"
+            required
+            error={errors.membershipType}
+          >
             <Select
               value={data.membershipType}
               onValueChange={(v) => onChange("membershipType", v)}
@@ -343,14 +381,14 @@ function Part1({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <FieldGroup label="Last Name" required>
+          <FieldGroup label="Last Name" required error={errors.lastName}>
             <Input
               placeholder="Enter last name"
               value={data.lastName}
               onChange={(e) => onChange("lastName", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="First Name" required>
+          <FieldGroup label="First Name" required error={errors.firstName}>
             <Input
               placeholder="Enter first name"
               value={data.firstName}
@@ -382,7 +420,7 @@ function Part1({
               </SelectContent>
             </Select>
           </FieldGroup>
-          <FieldGroup label="Age" required>
+          <FieldGroup label="Age" required error={errors.age}>
             <Input
               type="number"
               min={0}
@@ -392,14 +430,14 @@ function Part1({
               onChange={(e) => onChange("age", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="Birthdate" required>
+          <FieldGroup label="Birthdate" required error={errors.birthdate}>
             <Input
               type="date"
               value={data.birthdate}
               onChange={(e) => onChange("birthdate", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="Civil Status" required>
+          <FieldGroup label="Civil Status" required error={errors.civilStatus}>
             <Select
               value={data.civilStatus}
               onValueChange={(v) => onChange("civilStatus", v)}
@@ -430,9 +468,7 @@ function Part1({
                 <Input
                   placeholder="Enter maiden middle name"
                   value={data.maidenMiddleName}
-                  onChange={(e) =>
-                    onChange("maidenMiddleName", e.target.value)
-                  }
+                  onChange={(e) => onChange("maidenMiddleName", e.target.value)}
                 />
               </FieldGroup>
             </>
@@ -461,7 +497,9 @@ function Part1({
                 <SelectItem value="elementary">Elementary</SelectItem>
                 <SelectItem value="high_school">High School</SelectItem>
                 <SelectItem value="senior_high">Senior High School</SelectItem>
-                <SelectItem value="vocational">Vocational / Technical</SelectItem>
+                <SelectItem value="vocational">
+                  Vocational / Technical
+                </SelectItem>
                 <SelectItem value="college">College</SelectItem>
                 <SelectItem value="post_grad">Post Graduate</SelectItem>
               </SelectContent>
@@ -537,7 +575,7 @@ function Part1({
                     <SelectItem key={bt} value={bt}>
                       {bt}
                     </SelectItem>
-                  )
+                  ),
                 )}
               </SelectContent>
             </Select>
@@ -688,9 +726,11 @@ function Part2({
 function Part3({
   data,
   onChange,
+  errors = {},
 }: {
   data: BarangayProfileFormData;
   onChange: (field: keyof BarangayProfileFormData, value: string) => void;
+  errors?: Record<string, string>;
 }) {
   return (
     <div className="space-y-6">
@@ -702,28 +742,36 @@ function Part3({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldGroup label="Barangay" required>
+          <FieldGroup label="Barangay" required error={errors.currentBarangay}>
             <Input
               placeholder="Enter barangay"
               value={data.currentBarangay}
               onChange={(e) => onChange("currentBarangay", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="House No. / Street Name" required>
+          <FieldGroup
+            label="House No. / Street Name"
+            required
+            error={errors.currentStreet}
+          >
             <Input
               placeholder="e.g. 123 Rizal St."
               value={data.currentStreet}
               onChange={(e) => onChange("currentStreet", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="City / Municipality" required>
+          <FieldGroup
+            label="City / Municipality"
+            required
+            error={errors.currentCity}
+          >
             <Input
               placeholder="Enter city or municipality"
               value={data.currentCity}
               onChange={(e) => onChange("currentCity", e.target.value)}
             />
           </FieldGroup>
-          <FieldGroup label="Province" required>
+          <FieldGroup label="Province" required error={errors.currentProvince}>
             <Input
               placeholder="Enter province"
               value={data.currentProvince}
@@ -795,7 +843,7 @@ function Part3({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldGroup label="Email Address">
+          <FieldGroup label="Email Address" error={errors.email}>
             <Input
               type="email"
               placeholder="example@email.com"
@@ -829,7 +877,10 @@ function Part4({
   const isPregnant = data.isPregnant === "yes";
   const selectedPastMedical = parseHistorySelections(data.pastMedicalHistory);
 
-  const togglePastMedical = (key: (typeof HISTORY_OPTIONS)[number], checked: boolean) => {
+  const togglePastMedical = (
+    key: (typeof HISTORY_OPTIONS)[number],
+    checked: boolean,
+  ) => {
     const next = new Set(selectedPastMedical);
 
     if (checked) {
@@ -860,7 +911,10 @@ function Part4({
             <Select
               value={data.isPregnant}
               onValueChange={(v) =>
-                onChange("isPregnant", v as BarangayProfileFormData["isPregnant"])
+                onChange(
+                  "isPregnant",
+                  v as BarangayProfileFormData["isPregnant"],
+                )
               }
             >
               <SelectTrigger>
@@ -918,7 +972,9 @@ function Part4({
                 <Input
                   type="date"
                   value={data.prenatalCheckupDate}
-                  onChange={(e) => onChange("prenatalCheckupDate", e.target.value)}
+                  onChange={(e) =>
+                    onChange("prenatalCheckupDate", e.target.value)
+                  }
                 />
               </FieldGroup>
               <FieldGroup label="Pregnancy Risk Level">
@@ -936,7 +992,10 @@ function Part4({
                   </SelectContent>
                 </Select>
               </FieldGroup>
-              <FieldGroup label="Pregnancy Remarks" className="md:col-span-2 lg:col-span-3">
+              <FieldGroup
+                label="Pregnancy Remarks"
+                className="md:col-span-2 lg:col-span-3"
+              >
                 <Input
                   placeholder="Notes on pregnancy status, referrals, or concerns"
                   value={data.pregnancyRemarks}
@@ -961,7 +1020,10 @@ function Part4({
               <div className="grid grid-cols-1 md:grid-cols-4">
                 <div className="border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 p-3 space-y-2">
                   {HISTORY_OPTIONS.slice(0, 10).map((key) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <Checkbox
                         checked={selectedPastMedical.has(key)}
                         onCheckedChange={(checked) =>
@@ -974,7 +1036,10 @@ function Part4({
                 </div>
                 <div className="border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 p-3 space-y-2">
                   {HISTORY_OPTIONS.slice(10).map((key) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <Checkbox
                         checked={selectedPastMedical.has(key)}
                         onCheckedChange={(checked) =>
@@ -989,7 +1054,9 @@ function Part4({
                   <FieldGroup label="Specify allergy:">
                     <Input
                       value={data.pmhSpecifyAllergy}
-                      onChange={(e) => onChange("pmhSpecifyAllergy", e.target.value)}
+                      onChange={(e) =>
+                        onChange("pmhSpecifyAllergy", e.target.value)
+                      }
                     />
                   </FieldGroup>
                   <FieldGroup label="Specify hepatitis type:">
@@ -1004,14 +1071,19 @@ function Part4({
                     <Input
                       value={data.pmhSpecifyPulmonaryTbCategory}
                       onChange={(e) =>
-                        onChange("pmhSpecifyPulmonaryTbCategory", e.target.value)
+                        onChange(
+                          "pmhSpecifyPulmonaryTbCategory",
+                          e.target.value,
+                        )
                       }
                     />
                   </FieldGroup>
                   <FieldGroup label="Others, please specify:">
                     <Input
                       value={data.pmhOthersSpecify}
-                      onChange={(e) => onChange("pmhOthersSpecify", e.target.value)}
+                      onChange={(e) =>
+                        onChange("pmhOthersSpecify", e.target.value)
+                      }
                     />
                   </FieldGroup>
                 </div>
@@ -1072,7 +1144,10 @@ function Part5({
 }) {
   const selectedFamilyHistory = parseHistorySelections(data.familyHistory);
 
-  const toggleFamilyHistory = (key: (typeof HISTORY_OPTIONS)[number], checked: boolean) => {
+  const toggleFamilyHistory = (
+    key: (typeof HISTORY_OPTIONS)[number],
+    checked: boolean,
+  ) => {
     const next = new Set(selectedFamilyHistory);
 
     if (checked) {
@@ -1105,7 +1180,10 @@ function Part5({
               <div className="grid grid-cols-1 md:grid-cols-4">
                 <div className="border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 p-3 space-y-2">
                   {HISTORY_OPTIONS.slice(0, 10).map((key) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <Checkbox
                         checked={selectedFamilyHistory.has(key)}
                         onCheckedChange={(checked) =>
@@ -1118,7 +1196,10 @@ function Part5({
                 </div>
                 <div className="border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 p-3 space-y-2">
                   {HISTORY_OPTIONS.slice(10).map((key) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <Checkbox
                         checked={selectedFamilyHistory.has(key)}
                         onCheckedChange={(checked) =>
@@ -1133,7 +1214,9 @@ function Part5({
                   <FieldGroup label="Specify allergy:">
                     <Input
                       value={data.fhSpecifyAllergy}
-                      onChange={(e) => onChange("fhSpecifyAllergy", e.target.value)}
+                      onChange={(e) =>
+                        onChange("fhSpecifyAllergy", e.target.value)
+                      }
                     />
                   </FieldGroup>
                   <FieldGroup label="Specify hepatitis type:">
@@ -1155,7 +1238,9 @@ function Part5({
                   <FieldGroup label="Others, please specify:">
                     <Input
                       value={data.fhOthersSpecify}
-                      onChange={(e) => onChange("fhOthersSpecify", e.target.value)}
+                      onChange={(e) =>
+                        onChange("fhOthersSpecify", e.target.value)
+                      }
                     />
                   </FieldGroup>
                 </div>
@@ -1163,20 +1248,27 @@ function Part5({
                   <FieldGroup label="Specify organ with cancer:">
                     <Input
                       value={data.fhSpecifyOrganCancer}
-                      onChange={(e) => onChange("fhSpecifyOrganCancer", e.target.value)}
+                      onChange={(e) =>
+                        onChange("fhSpecifyOrganCancer", e.target.value)
+                      }
                     />
                   </FieldGroup>
                   <FieldGroup label="Highest blood pressure (BP):">
                     <Input
                       value={data.fhHighestBloodPressure}
-                      onChange={(e) => onChange("fhHighestBloodPressure", e.target.value)}
+                      onChange={(e) =>
+                        onChange("fhHighestBloodPressure", e.target.value)
+                      }
                     />
                   </FieldGroup>
                   <FieldGroup label="Specify extrapulmonary tuberculosis category:">
                     <Input
                       value={data.fhSpecifyExtrapulmonaryTbCategory}
                       onChange={(e) =>
-                        onChange("fhSpecifyExtrapulmonaryTbCategory", e.target.value)
+                        onChange(
+                          "fhSpecifyExtrapulmonaryTbCategory",
+                          e.target.value,
+                        )
                       }
                     />
                   </FieldGroup>
@@ -1186,7 +1278,9 @@ function Part5({
           </div>
 
           <div>
-            <p className="text-sm font-semibold mb-2">Personal Social History</p>
+            <p className="text-sm font-semibold mb-2">
+              Personal Social History
+            </p>
             <div className="rounded-md border border-slate-200 dark:border-slate-800 p-3 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <p className="text-sm font-medium">Smoking</p>
@@ -1213,7 +1307,9 @@ function Part5({
                 <FieldGroup label="Number of packs per year:">
                   <Input
                     value={data.smokingPacksPerYear}
-                    onChange={(e) => onChange("smokingPacksPerYear", e.target.value)}
+                    onChange={(e) =>
+                      onChange("smokingPacksPerYear", e.target.value)
+                    }
                   />
                 </FieldGroup>
               </div>
@@ -1243,7 +1339,9 @@ function Part5({
                 <FieldGroup label="Number of bottles per day:">
                   <Input
                     value={data.alcoholBottlesPerDay}
-                    onChange={(e) => onChange("alcoholBottlesPerDay", e.target.value)}
+                    onChange={(e) =>
+                      onChange("alcoholBottlesPerDay", e.target.value)
+                    }
                   />
                 </FieldGroup>
               </div>
@@ -1279,7 +1377,10 @@ function Part5({
                     <Checkbox
                       checked={data.sexuallyActive === "yes"}
                       onCheckedChange={(checked) =>
-                        onChange("sexuallyActive", checked === true ? "yes" : "")
+                        onChange(
+                          "sexuallyActive",
+                          checked === true ? "yes" : "",
+                        )
                       }
                     />
                     Yes
@@ -1336,12 +1437,23 @@ export function BarangayProfileForm({
     ...initialData,
   });
   const [activePart, setActivePart] = useState<Part>("part-1");
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   const handleChange = (
     field: keyof BarangayProfileFormData,
-    value: string
+    value: string,
   ) => {
     setData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
   const currentIndex = PARTS.indexOf(activePart);
@@ -1360,11 +1472,42 @@ export function BarangayProfileForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form data
+    const errors = validateBarangayProfileForm(data);
+
+    if (hasValidationErrors(errors)) {
+      setValidationErrors(errors);
+      // Scroll to top to show error message
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // Clear validation errors and submit
+    setValidationErrors({});
     onSubmit(data);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* Validation Error Alert */}
+      {hasValidationErrors(validationErrors) && (
+        <Alert className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800">
+          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          <AlertDescription className="text-red-800 dark:text-red-200 ml-2">
+            <strong>
+              Please fix {Object.keys(validationErrors).length} validation error
+              {Object.keys(validationErrors).length !== 1 ? "s" : ""}:
+            </strong>
+            <ul className="mt-2 ml-6 list-disc text-sm">
+              {Object.entries(validationErrors).map(([field, error]) => (
+                <li key={field}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Step Indicators */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {PARTS.map((part, idx) => (
@@ -1376,7 +1519,7 @@ export function BarangayProfileForm({
               "flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors border",
               activePart === part
                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+                : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800",
             )}
           >
             <span
@@ -1384,7 +1527,7 @@ export function BarangayProfileForm({
                 "flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold",
                 activePart === part
                   ? "bg-white text-blue-600"
-                  : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                  : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
               )}
             >
               {idx + 1}
@@ -1396,20 +1539,14 @@ export function BarangayProfileForm({
 
       {/* Form Parts */}
       {activePart === "part-1" && (
-        <Part1 data={data} onChange={handleChange} />
+        <Part1 data={data} onChange={handleChange} errors={validationErrors} />
       )}
-      {activePart === "part-2" && (
-        <Part2 data={data} onChange={handleChange} />
-      )}
+      {activePart === "part-2" && <Part2 data={data} onChange={handleChange} />}
       {activePart === "part-3" && (
-        <Part3 data={data} onChange={handleChange} />
+        <Part3 data={data} onChange={handleChange} errors={validationErrors} />
       )}
-      {activePart === "part-4" && (
-        <Part4 data={data} onChange={handleChange} />
-      )}
-      {activePart === "part-5" && (
-        <Part5 data={data} onChange={handleChange} />
-      )}
+      {activePart === "part-4" && <Part4 data={data} onChange={handleChange} />}
+      {activePart === "part-5" && <Part5 data={data} onChange={handleChange} />}
 
       {/* Navigation & Submit */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
@@ -1438,7 +1575,15 @@ export function BarangayProfileForm({
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || hasValidationErrors(validationErrors)}
+              title={
+                hasValidationErrors(validationErrors)
+                  ? "Please fix validation errors before saving"
+                  : ""
+              }
+            >
               <Save className="h-4 w-4 mr-1" />
               {isSubmitting
                 ? "Saving..."
