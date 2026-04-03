@@ -20,11 +20,11 @@ interface BarangayVaccinationLegendProps {
 export type { BarangayVaccinationLegendProps };
 
 /**
- * Vaccination coverage legend component
+ * Health coverage legend component
  */
 export function BarangayVaccinationLegend({
-  title = "Vaccination Coverage Scale",
-  description = "Color-coded representation of vaccination coverage rates across barangays",
+  title = "Health Coverage Scale",
+  description = "Color-coded representation of barangay health service coverage rates",
   showDetail = true,
 }: BarangayVaccinationLegendProps) {
   return (
@@ -38,14 +38,12 @@ export function BarangayVaccinationLegend({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Legend items */}
           <div className="grid gap-3">
             {COVERAGE_COLORS.map((level) => (
               <div
                 key={`${level.min}-${level.max}`}
                 className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                {/* Color swatch */}
                 <div
                   className="w-8 h-8 rounded border-2"
                   style={{
@@ -54,7 +52,6 @@ export function BarangayVaccinationLegend({
                   }}
                 />
 
-                {/* Label and range */}
                 <div className="flex-1">
                   <div className="font-semibold text-sm text-gray-900">
                     {level.color.label}
@@ -64,7 +61,6 @@ export function BarangayVaccinationLegend({
                   </div>
                 </div>
 
-                {/* Coverage percentage */}
                 <div className="text-sm font-semibold text-gray-700">
                   {level.min}-{level.max}%
                 </div>
@@ -72,7 +68,6 @@ export function BarangayVaccinationLegend({
             ))}
           </div>
 
-          {/* Additional information */}
           {showDetail && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex gap-3">
@@ -85,7 +80,7 @@ export function BarangayVaccinationLegend({
                       needed
                     </li>
                     <li>
-                      <strong>Low (40-60%):</strong> Accelerated vaccination
+                      <strong>Low (40-60%):</strong> Accelerated response
                       needed
                     </li>
                     <li>
@@ -101,16 +96,16 @@ export function BarangayVaccinationLegend({
             </div>
           )}
 
-          {/* Hover interaction info */}
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 text-xs text-amber-900">
             <p className="font-semibold mb-2">Map Interaction:</p>
             <ul className="space-y-1">
               <li>
-                ✓ <strong>Hover:</strong> See barangay name and vaccination
-                coverage
+                - <strong>Hover:</strong> See barangay name and selected
+                service coverage
               </li>
               <li>
-                ✓ <strong>Click:</strong> View detailed statistics in side panel
+                - <strong>Click:</strong> View detailed statistics in side
+                panel
               </li>
             </ul>
           </div>
