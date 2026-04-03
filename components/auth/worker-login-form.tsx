@@ -53,7 +53,7 @@ export function WorkerLoginForm() {
 
       // Redirect to workers dashboard
       router.push("/dashboard-workers");
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
       setIsPending(false);
     }

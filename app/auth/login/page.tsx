@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import Link from "next/link";
 
 /**
- * Login page for internal staff
+ * Staff login page
  * Redirects to dashboard if already authenticated
  */
 export default async function LoginPage() {
@@ -32,25 +32,34 @@ export default async function LoginPage() {
             Health System
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Barangay Management Dashboard
+            Staff Access Portal
           </p>
         </div>
 
         <LoginForm />
 
         <div className="mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-200">
-          <p className="font-medium">Demo Credentials (Testing)</p>
-          <p className="mt-1 text-xs">Contact your administrator for access</p>
+          <p className="font-medium">Portal Security</p>
+          <p className="mt-1 text-xs">
+            Admin and worker accounts are blocked from this staff login route.
+          </p>
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Are you a community City Health Worker?{" "}
+        <div className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
+          <p>
+            Need a different portal?{" "}
+            <Link
+              href="/auth/admin"
+              className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Admin Login
+            </Link>{" "}
+            or{" "}
             <Link
               href="/auth/workers"
               className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
             >
-              Login as Worker
+              Worker Login
             </Link>
           </p>
         </div>

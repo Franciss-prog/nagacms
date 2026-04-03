@@ -105,6 +105,12 @@ export default function Page() {
             </Link>
             <Link
               href="/auth/login"
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium transition hover:bg-muted"
+            >
+              Staff Login
+            </Link>
+            <Link
+              href="/auth/admin"
               className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
               Admin Login

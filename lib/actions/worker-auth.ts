@@ -6,6 +6,8 @@ import { loginSchema } from "@/lib/schemas/auth";
 import type { Session } from "@/lib/types";
 import bcrypt from "bcryptjs";
 
+const GENERIC_LOGIN_ERROR = "Invalid username or password";
+
 /**
  * Server Action: Worker Login with username and password
  * Verifies credentials against public.users table with role='worker'
@@ -18,7 +20,7 @@ export async function workerLoginAction(formData: {
   // Validate input
   const validation = loginSchema.safeParse(formData);
   if (!validation.success) {
-    return { success: false, error: "Invalid username or password" };
+    return { success: false, error: GENERIC_LOGIN_ERROR };
   }
 
   const { username, password } = validation.data;
@@ -36,14 +38,14 @@ export async function workerLoginAction(formData: {
 
     if (error || !user) {
       // Don't reveal if user exists or not (security best practice)
-      return { success: false, error: "Invalid worker credentials" };
+      return { success: false, error: GENERIC_LOGIN_ERROR };
     }
 
     // Verify password using bcrypt
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
-      return { success: false, error: "Invalid worker credentials" };
+      return { success: false, error: GENERIC_LOGIN_ERROR };
     }
 
     // Create session with 7-day expiry

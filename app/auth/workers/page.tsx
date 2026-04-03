@@ -8,7 +8,6 @@ import Link from "next/link";
  * Redirects to workers dashboard if already authenticated
  */
 export default async function WorkerLoginPage() {
-  // If already logged in as worker, redirect to workers dashboard
   const session = await getSession();
   if (session && session.user.role === "workers") {
     redirect("/dashboard-workers");
@@ -19,7 +18,7 @@ export default async function WorkerLoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-emerald-900 dark:text-white">
-          City Health Portal
+            City Health Portal
           </h1>
           <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
             City Health Login
@@ -37,12 +36,19 @@ export default async function WorkerLoginPage() {
 
         <div className="mt-4 text-center">
           <p className="text-sm text-emerald-700 dark:text-emerald-300">
-            Are you a staff member?{" "}
+            Need a different portal?{" "}
             <Link
               href="/auth/login"
               className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              Login as Staff
+              Staff Login
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/auth/admin"
+              className="font-medium text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+            >
+              Admin Login
             </Link>
           </p>
         </div>
